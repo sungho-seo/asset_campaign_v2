@@ -1,5 +1,7 @@
 import { ShieldCheck } from 'lucide-react';
 import { KpiCards } from '@/components/dashboard/KpiCards';
+import { ProgressChart } from '@/components/dashboard/ProgressChart';
+import { HourlyHeatmap } from '@/components/dashboard/HourlyHeatmap';
 
 /** 대시보드 (PRD §7) — 정보보호담당 구성원 전용. LG레드 강조 모듈. */
 export default function DashboardPage() {
@@ -14,6 +16,11 @@ export default function DashboardPage() {
       </div>
 
       <KpiCards />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <ProgressChart />
+        <HourlyHeatmap />
+      </div>
     </div>
   );
 }

@@ -52,6 +52,63 @@ export type UpdatedAssetEntry = {
   csp?: string;
 };
 
+// ── 진척률 추이 (D+0 ~ D+28) — 식별률·참여율 점진 증가 ──
+export type ProgressPoint = {
+  dIndex: number; // D+N
+  date: string; // ISO date
+  identifyRate: number; // 0~100
+  participateRate: number;
+};
+
+function buildProgress(): ProgressPoint[] {
+  const start = new Date(CAMPAIGN.startDate + 'T00:00:00+09:00');
+  const out: ProgressPoint[] = [];
+  for (let d = 0; d <= 28; d++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + d);
+    // 로지스틱 유사 증가
+    const identify = Math.round((28 * (d / 28) ** 0.7 + 1) * 10) / 10; // ~ 0→29%
+    const participate = Math.round((50 * (d / 28) ** 0.6 + 2) * 10) / 10; // ~ 0→52%
+    out.push({
+      dIndex: d,
+      date: date.toISOString(),
+      identifyRate: Math.min(identify, 100),
+      participateRate: Math.min(participate, 100),
+    });
+  }
+  return out;
+}
+
+export const progressTrend: ProgressPoint[] = buildProgress();
+
+// ── 시간대별 접속 추이 히트맵 (요일 7 × 시간 24), 주별 ──
+export const HEATMAP_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+
+function buildHeatmapWeek(weekFactor: number): number[][] {
+  // [day][hour] 접속 수
+  return HEATMAP_DAYS.map((_, day) => {
+    const weekend = day === 0 || day === 6;
+    return Array.from({ length: 24 }, (_, hour) => {
+      let base = 0;
+      if (hour >= 9 && hour <= 18) base = weekend ? 4 : 28;
+      else if (hour >= 7 && hour < 9) base = weekend ? 2 : 12;
+      else if (hour > 18 && hour <= 21) base = weekend ? 2 : 10;
+      else base = weekend ? 0 : 2;
+      if (hour === 12) base = Math.round(base * 0.6); // 점심 감소
+      const jitter = ((day * 7 + hour) % 5) - 2;
+      return Math.max(0, Math.round((base + jitter) * weekFactor));
+    });
+  });
+}
+
+// 4주: 후반 주로 갈수록 접속 증가
+export const heatmapByWeek: number[][][] = [
+  buildHeatmapWeek(0.6),
+  buildHeatmapWeek(0.85),
+  buildHeatmapWeek(1.0),
+  buildHeatmapWeek(0.75),
+];
+
 export const updatedAssetsToday: UpdatedAssetEntry[] = [
   { id: 'u1', hostname: 'ha-ctrl-12', kind: 'modified', by: '김현수', at: '2026-06-18T09:02:00+09:00' },
   { id: 'u2', hostname: 'vs-edge-new', kind: 'new', by: '이서진', at: '2026-06-18T09:14:00+09:00' },

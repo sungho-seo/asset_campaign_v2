@@ -1,7 +1,14 @@
 import { isAssetIdentified } from '@/types/domain';
 import { mockDb } from '@/lib/mock';
-import { CAMPAIGN, BASELINE, accessLogToday, updatedAssetsToday } from '@/lib/mockDashboard';
-import type { AccessEntry, UpdatedAssetEntry } from '@/lib/mockDashboard';
+import {
+  CAMPAIGN,
+  BASELINE,
+  accessLogToday,
+  updatedAssetsToday,
+  progressTrend,
+  heatmapByWeek,
+} from '@/lib/mockDashboard';
+import type { AccessEntry, UpdatedAssetEntry, ProgressPoint } from '@/lib/mockDashboard';
 import { useNoticeStore } from '@/stores/noticeStore';
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
@@ -65,6 +72,16 @@ export async function getKpi(): Promise<KpiData> {
 export async function getAccessLog(): Promise<AccessEntry[]> {
   await delay(150);
   return accessLogToday;
+}
+
+export async function getProgressTrend(): Promise<ProgressPoint[]> {
+  await delay(150);
+  return progressTrend;
+}
+
+export async function getHourlyHeatmap(): Promise<number[][][]> {
+  await delay(150);
+  return heatmapByWeek;
 }
 
 export async function getUpdatedAssets(): Promise<UpdatedAssetEntry[]> {

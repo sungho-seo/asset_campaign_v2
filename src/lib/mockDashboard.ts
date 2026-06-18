@@ -116,3 +116,83 @@ export const updatedAssetsToday: UpdatedAssetEntry[] = [
   { id: 'u4', hostname: 'cs-gcp-batch', kind: 'new', by: '강민호', at: '2026-06-18T15:30:00+09:00', csp: 'GCP' },
   { id: 'u5', hostname: 'ms-sim-03', kind: 'modified', by: '오세훈', at: '2026-06-18T13:20:00+09:00' },
 ];
+
+// ── §7.5 IT 자산 정보 카드 baseline ──
+export const ASSET_TYPE_BASELINE = {
+  onprem: { total: 9420, modified: 318, neo: 41 },
+  cloud: { total: 3427, modified: 94, neo: 46 },
+  unassigned: 7610,
+  retired: 233,
+};
+
+// 담당자 전원 퇴사 (인사 별도 쿼리 결과 — 화면만 준비)
+export type RetiredAssetRow = { id: string; hostname: string; lastOwner: string; retiredAt: string };
+export const retiredAssets: RetiredAssetRow[] = [
+  { id: 'R-1', hostname: 'legacy-erp-01', lastOwner: '강퇴직(2026-03)', retiredAt: '2026-03-31' },
+  { id: 'R-2', hostname: 'old-mail-relay', lastOwner: '윤퇴직(2026-04)', retiredAt: '2026-04-15' },
+  { id: 'R-3', hostname: 'archive-nas-02', lastOwner: '한퇴직(2026-02)', retiredAt: '2026-02-28' },
+];
+
+// ── §7.6 방치 자산 ──
+export const ABANDONED = {
+  abandoned: 8247,
+  total: 12847,
+  deltaPrevDay: -63,
+};
+export type AbandonedRow = { id: string; hostname: string; note: string };
+export const abandonedByTab: { all: AbandonedRow[]; withOwner: AbandonedRow[]; withAccess: AbandonedRow[] } = {
+  all: [
+    { id: 'ab1', hostname: 'unknown-srv-201', note: '담당자 없음 · 미열람' },
+    { id: 'ab2', hostname: 'unknown-srv-202', note: '담당자 없음 · 미열람' },
+    { id: 'ab3', hostname: 'dev-pc-330', note: '담당자 없음 · 미열람' },
+  ],
+  withOwner: [
+    { id: 'ab4', hostname: 'ha-line-07', note: '담당자 2명 지정, 갱신 안 함' },
+    { id: 'ab5', hostname: 'vs-test-11', note: '담당자 1명 지정, 갱신 안 함' },
+  ],
+  withAccess: [
+    { id: 'ab6', hostname: 'sec-proxy-03', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
+    { id: 'ab7', hostname: 'ms-db-replica', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
+  ],
+};
+
+// ── §7.8 이상 징후 baseline seeds (검색률 Top 10 / 검색 0건) ──
+export type SearchTopRow = { key: string; attempts: number; searchers: number };
+export const searchTopIp: SearchTopRow[] = [
+  { key: '10.20.30.40', attempts: 47, searchers: 12 },
+  { key: '172.16.8.10', attempts: 38, searchers: 9 },
+  { key: '1.1.1.1', attempts: 31, searchers: 14 },
+  { key: '10.70.1.10', attempts: 22, searchers: 6 },
+  { key: '2.2.2.2', attempts: 19, searchers: 8 },
+];
+export const searchTopHost: SearchTopRow[] = [
+  { key: 'visz-web-01', attempts: 41, searchers: 10 },
+  { key: 'sec-siem-01', attempts: 27, searchers: 7 },
+  { key: 'es-sys-dev-01', attempts: 18, searchers: 5 },
+];
+export const searchTopPerson: SearchTopRow[] = [
+  { key: '서성호', attempts: 33, searchers: 4 },
+  { key: '이몽룡', attempts: 25, searchers: 6 },
+  { key: '정약용', attempts: 17, searchers: 3 },
+];
+export type DupEditSeed = { id: string; hostname: string; userA: string; userB: string; occurredAt: string };
+export const dupEditSeed: DupEditSeed[] = [
+  { id: 'de1', hostname: 'ha-ctrl-01', userA: '박문수', userB: '김현수', occurredAt: '2026-06-16T10:00:00+09:00' },
+];
+export type OverwriteSeed = { id: string; hostname: string; overwroteBy: string; previousBy: string; occurredAt: string };
+export const overwriteSeed: OverwriteSeed[] = [
+  { id: 'ov1', hostname: 'sec-siem-01', overwroteBy: '정우성', previousBy: '정약용', occurredAt: '2026-06-16T15:30:00+09:00' },
+];
+export type OwnerChangeSeed = {
+  id: string; hostname: string; actor: string; action: 'add' | 'remove'; target: string; role: string; occurredAt: string;
+};
+export const ownerChangeSeed: OwnerChangeSeed[] = [
+  { id: 'oc1', hostname: 'vs-platform-a', actor: '이서진', action: 'add', target: '이서진', role: '현업', occurredAt: '2026-06-17T09:00:00+09:00' },
+  { id: 'oc2', hostname: 'es-sys-dev-01', actor: '윤아름', action: 'remove', target: '김춘향', role: 'SM', occurredAt: '2026-06-17T16:40:00+09:00' },
+];
+
+export type ZeroSearchRow = { id: string; query: string; searcher: string; at: string; proceeded: boolean };
+export const zeroSearches: ZeroSearchRow[] = [
+  { id: 'z1', query: '10.99.5.5', searcher: '김현수', at: '2026-06-17T11:00:00+09:00', proceeded: true },
+  { id: 'z2', query: 'new-vm-xyz', searcher: '이서진', at: '2026-06-17T14:20:00+09:00', proceeded: false },
+];

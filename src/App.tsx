@@ -5,16 +5,8 @@ import { RequireNotice, RequireDashboard } from './routes/guards';
 import NoticePage from './routes/NoticePage';
 import NoticeDonePage from './routes/NoticeDonePage';
 import SearchPage from './routes/SearchPage';
+import DashboardPage from './routes/DashboardPage';
 import Demo from './components/_demo/Demo';
-
-function PlaceholderPage({ title, phase }: { title: string; phase: string }) {
-  return (
-    <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-      <h1 className="text-2xl font-bold text-neutral-900">{title}</h1>
-      <p className="mt-3 text-sm text-neutral-500">{phase}에서 구현됩니다.</p>
-    </div>
-  );
-}
 
 export default function App() {
   return (
@@ -37,7 +29,7 @@ export default function App() {
             path="/dashboard"
             element={
               <RequireDashboard>
-                <PlaceholderPage title="대시보드" phase="Phase 7~10" />
+                <DashboardPage />
               </RequireDashboard>
             }
           />

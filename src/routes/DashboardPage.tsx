@@ -1,0 +1,19 @@
+import { ShieldCheck } from 'lucide-react';
+import { KpiCards } from '@/components/dashboard/KpiCards';
+
+/** 대시보드 (PRD §7) — 정보보호담당 구성원 전용. LG레드 강조 모듈. */
+export default function DashboardPage() {
+  return (
+    <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
+      <div className="flex items-center gap-2 border-l-4 border-lgred pl-3">
+        <ShieldCheck size={20} className="text-lgred" />
+        <div>
+          <h1 className="text-lg font-bold text-neutral-900">캠페인 모니터링 대시보드</h1>
+          <p className="text-xs text-neutral-500">정보보호담당 구성원 전용 · 5분 이내 준실시간 갱신</p>
+        </div>
+      </div>
+
+      <KpiCards />
+    </div>
+  );
+}

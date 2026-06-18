@@ -1,11 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { TopBar } from './components/layout/TopBar';
 import { Toaster } from './components/feedback/Toaster';
+import { RequireNotice, RequireDashboard } from './routes/guards';
+import NoticePage from './routes/NoticePage';
+import NoticeDonePage from './routes/NoticeDonePage';
 import Demo from './components/_demo/Demo';
-
-/**
- * 라우팅 스켈레톤. 각 화면(안내/검색/대시보드)은 이후 Phase에서 실제 구현으로 교체된다.
- */
 
 function PlaceholderPage({ title, phase }: { title: string; phase: string }) {
   return (
@@ -23,11 +22,23 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Navigate to="/notice" replace />} />
-          <Route path="/notice" element={<PlaceholderPage title="안내" phase="Phase 3" />} />
-          <Route path="/search" element={<PlaceholderPage title="자산 검색" phase="Phase 4" />} />
+          <Route path="/notice" element={<NoticePage />} />
+          <Route path="/notice/done" element={<NoticeDonePage />} />
+          <Route
+            path="/search"
+            element={
+              <RequireNotice>
+                <PlaceholderPage title="자산 검색" phase="Phase 4" />
+              </RequireNotice>
+            }
+          />
           <Route
             path="/dashboard"
-            element={<PlaceholderPage title="대시보드" phase="Phase 7~10" />}
+            element={
+              <RequireDashboard>
+                <PlaceholderPage title="대시보드" phase="Phase 7~10" />
+              </RequireDashboard>
+            }
           />
           <Route path="/demo" element={<Demo />} />
           <Route path="*" element={<Navigate to="/notice" replace />} />

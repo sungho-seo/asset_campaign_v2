@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-neutral-50 text-neutral-900 antialiased;
+}
+
+/* 검증 배너 → 필드 펄스 (Phase 5에서 사용) */
+@keyframes field-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(165, 0, 52, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(165, 0, 52, 0);
+  }
+}
+
+.field-pulse {
+  animation: field-pulse 0.9s ease-out 2;
+}

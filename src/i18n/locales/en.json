@@ -1,0 +1,19 @@
+{
+  "app": {
+    "title": "IT Asset Registration",
+    "subtitle": "Please review your related asset information"
+  },
+  "nav": {
+    "notice": "Guide",
+    "employee": "Employee",
+    "dashboard": "Dashboard"
+  },
+  "common": {
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "save": "Save changes",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  }
+}

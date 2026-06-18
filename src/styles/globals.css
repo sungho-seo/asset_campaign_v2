@@ -29,3 +29,12 @@ body {
 .field-pulse {
   animation: field-pulse 0.9s ease-out 2;
 }
+
+@keyframes slidein {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

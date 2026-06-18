@@ -18,8 +18,9 @@ Qualys로 식별된 사내 IT 자산의 담당자·메타정보를 임직원이 
 ```bash
 npm install          # 의존성 설치
 npm run dev          # 개발 서버 (http://localhost:5174)
-npm run build        # 타입체크 + 프로덕션 빌드
-npm run preview      # 빌드 결과 미리보기 (http://localhost:8082)
+npm run build        # 타입체크 + 프로덕션 빌드 (dist/)
+npm run start        # 프로덕션 서버 (Node + Express, http://localhost:8082, /api/health)
+npm run preview      # (선택) vite 미리보기 (http://localhost:8082)
 npm run lint         # ESLint
 npm run typecheck    # tsc --noEmit
 ```
@@ -32,14 +33,25 @@ npm run typecheck    # tsc --noEmit
 | 운영(프로덕션) 포트 | `8082` |
 | 개발(Vite dev) 포트 | `5174` |
 
-## 배포
+## 배포 (Ubuntu 22.04, v1과 동일한 Node + Express + systemd 방식)
 
 ```bash
-./scripts/deploy.sh          # 최초/재배포 (docker compose build + up)
-./scripts/update.sh main     # 최신 코드 pull 후 재기동
+# 최초 설치 (서비스 계정/Node/빌드/systemd 등록까지 한 번에)
+sudo bash deploy/install.sh
+
+# 이후 업데이트 (pull → 빌드 → 재배포 → 헬스체크)
+bash deploy/update.sh
 ```
 
-systemd 등록은 `deploy/systemd/asset-campaign-v2.service` 참고.
+- 운영 서버는 `npm run start`(Express, `server/index.js`)로 `dist/`를 8082 포트에 서빙하며 `/api/health` 제공.
+- systemd 유닛: `deploy/asset-campaign-v2.service` (서비스명 `asset-campaign-v2`).
+- 환경변수: `PORT`(기본 8082) · `BRANCH`(기본 main) · `INSTALL_DIR`(기본 `/opt/asset_campaign_v2`) · `SKIP_PULL=1`.
+- 사내 SSL inspection 환경: `LOCAL_SOURCE`에 `dist/`+`node_modules/`를 포함해 넘기면 서버에서 npm 설치/빌드를 생략.
+
+```bash
+sudo journalctl -u asset-campaign-v2 -f      # 로그
+sudo systemctl restart asset-campaign-v2     # 재시작
+```
 
 ## 폴더 구조
 
@@ -60,6 +72,9 @@ src/
 ├── types/domain.ts         # Asset, AssetOwner, NoticeResponse …
 ├── i18n/                   # i18next 설정 + locales(ko/en)
 └── styles/globals.css
+
+server/index.js             # 프로덕션 Express 서버 (정적 서빙 + /api/health)
+deploy/                     # install.sh · update.sh · asset-campaign-v2.service
 ```
 
 ## Mock 모드

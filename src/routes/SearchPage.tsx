@@ -10,7 +10,6 @@ import { searchAssets } from '@/lib/api/assets';
 import type { SearchType } from '@/lib/mock';
 import { isValidIPv4, joinIpParts } from '@/lib/validation';
 import { getCurrentUser } from '@/lib/mockAuth';
-import type { Asset } from '@/types/domain';
 import { AssetDrawer } from '@/components/asset/AssetDrawer';
 
 const TABS: { value: SearchType; label: string }[] = [
@@ -32,8 +31,8 @@ export default function SearchPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
-  // 사이드 패널(편집/신규) — Phase 5/6
-  const [selected, setSelected] = useState<Asset | null>(null);
+  // 사이드 패널(편집/신규)
+  const [editId, setEditId] = useState<string | null>(null);
   const [newOpen, setNewOpen] = useState(false);
   const [prefill, setPrefill] = useState('');
 
@@ -150,7 +149,7 @@ export default function SearchPage() {
           ) : (
             <>
               {paged.map((a) => (
-                <AssetResultRow key={a.id} asset={a} onClick={setSelected} />
+                <AssetResultRow key={a.id} asset={a} onClick={(asset) => setEditId(asset.id)} />
               ))}
               {pageCount > 1 && (
                 <div className="flex items-center justify-center gap-1 pt-2">
@@ -176,19 +175,19 @@ export default function SearchPage() {
 
       {isFetching && <p className="py-8 text-center text-sm text-neutral-400">검색 중…</p>}
 
-      {/* 편집 사이드 패널 (Phase 5) */}
-      <AssetDrawer
-        assetId={selected?.id ?? null}
-        open={!!selected}
-        onClose={() => setSelected(null)}
-      />
+      {/* 편집 사이드 패널 */}
+      <AssetDrawer assetId={editId} open={!!editId} onClose={() => setEditId(null)} />
 
-      {/* 신규 등록 (Phase 6) */}
+      {/* 신규 등록 */}
       <AssetDrawer
         mode="new"
         prefillQuery={prefill}
         open={newOpen}
         onClose={() => setNewOpen(false)}
+        onEditExisting={(id) => {
+          setNewOpen(false);
+          setEditId(id);
+        }}
       />
     </div>
   );

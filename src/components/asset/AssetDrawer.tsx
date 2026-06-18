@@ -32,6 +32,7 @@ type Props = {
   assetId?: string | null;
   mode?: 'edit' | 'new';
   prefillQuery?: string;
+  onEditExisting?: (assetId: string) => void;
 };
 
 export function AssetDrawer(props: Props) {
@@ -41,6 +42,7 @@ export function AssetDrawer(props: Props) {
         open={props.open}
         onClose={props.onClose}
         prefillQuery={props.prefillQuery ?? ''}
+        onEditExisting={props.onEditExisting}
       />
     );
   }
@@ -98,8 +100,8 @@ function EditAssetDrawer({ open, onClose, assetId }: Props) {
   });
 
   const saveMut = useMutation({
-    mutationFn: (v: { fields: AssetFields; base: number }) =>
-      updateAssetFields(assetId!, v.fields, v.base, confirmLatest),
+    mutationFn: (v: { fields: AssetFields; base: number; overwrite?: boolean }) =>
+      updateAssetFields(assetId!, v.fields, v.base, confirmLatest, { overwrite: v.overwrite }),
     onSuccess: (res) => {
       if (!res.ok) {
         setConflict({ current: res.current, mine: lastFieldsRef.current! });
@@ -151,7 +153,7 @@ function EditAssetDrawer({ open, onClose, assetId }: Props) {
   const resolveOverwrite = () => {
     if (!conflict) return;
     saveMut.mutate(
-      { fields: conflict.mine, base: conflict.current.version },
+      { fields: conflict.mine, base: conflict.current.version, overwrite: true },
       {
         onSuccess: (res) => {
           if (res.ok) {

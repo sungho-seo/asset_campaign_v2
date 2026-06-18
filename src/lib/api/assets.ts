@@ -1,6 +1,6 @@
 import type { Asset, OwnerRole } from '@/types/domain';
 import { isSearchable } from '@/types/domain';
-import { mockDb } from '@/lib/mock';
+import { mockDb, nextAssetId } from '@/lib/mock';
 import type { SearchType } from '@/lib/mock';
 import { getCurrentUser } from '@/lib/mockAuth';
 
@@ -96,23 +96,45 @@ export async function updateAssetFields(
   fields: AssetFields,
   baseVersion: number,
   confirmLatest: boolean,
+  opts?: { overwrite?: boolean },
 ): Promise<UpdateResult> {
   await delay();
   const asset = mockDb.assets.find((a) => a.id === id);
   if (!asset) throw new Error('asset not found');
 
   if (asset.version !== baseVersion) {
+    const me = getCurrentUser();
+    // 중복 수정(dup-edit) 이상 징후 기록 (§7.8)
+    mockDb.conflictEvents.push({
+      id: crypto.randomUUID(),
+      assetId: asset.id,
+      hostname: asset.hostname,
+      userA: asset.updatedBy ?? '다른 사용자',
+      userB: me.empName,
+      occurredAt: new Date().toISOString(),
+    });
     return { ok: false, conflict: true, current: { ...asset } };
   }
 
   const me = getCurrentUser();
   const now = new Date().toISOString();
+  const previousBy = asset.updatedBy;
   Object.assign(asset, fields);
   asset.version += 1;
   asset.updatedAt = now;
   asset.updatedBy = me.empName;
   asset.lastModifiedFieldChangeAt = now;
 
+  if (opts?.overwrite && previousBy && previousBy !== me.empName) {
+    mockDb.overwriteEvents.push({
+      id: crypto.randomUUID(),
+      assetId: asset.id,
+      hostname: asset.hostname,
+      overwroteBy: me.empName,
+      previousBy,
+      occurredAt: now,
+    });
+  }
   if (confirmLatest) {
     recordConfirmation(id);
   }
@@ -187,6 +209,104 @@ export async function removeOwner(assetId: string, ownerId: string): Promise<Ass
     });
   }
   return { ...asset, owners: [...asset.owners] };
+}
+
+// ── 신규 자산 등록 + IP 중복 처리 (PRD §3.3/3.4, §4.5) ──
+export type NewOwnerDraft = {
+  role: OwnerRole;
+  empNo: string;
+  empName: string;
+  email: string;
+  deptPath: string;
+};
+
+export type CreateResult =
+  | { status: 'single-dup'; existing: Asset } // 단일 중복 → 팝업으로 결정
+  | { status: 'created'; asset: Asset; multiDup: boolean };
+
+export async function createAsset(
+  fields: AssetFields,
+  owners: NewOwnerDraft[],
+): Promise<CreateResult> {
+  await delay();
+  const me = getCurrentUser();
+  const now = new Date().toISOString();
+
+  // 입력 IP와 겹치는 기존 자산
+  const matches = mockDb.assets.filter((a) => a.ips.some((ip) => fields.ips.includes(ip)));
+
+  // 단일 중복 → 생성하지 않고 기존 자산 반환 (사용자 결정)
+  if (matches.length === 1) {
+    return { status: 'single-dup', existing: { ...matches[0]! } };
+  }
+
+  const multiDup = matches.length >= 2;
+  const id = nextAssetId();
+  const asset: Asset = {
+    id,
+    version: 1,
+    hostname: fields.hostname,
+    servicePurpose: fields.servicePurpose,
+    ips: fields.ips,
+    externalAccess: fields.externalAccess,
+    domain: fields.domain,
+    os: fields.os,
+    osVersion: fields.osVersion,
+    location: fields.location,
+    securitySolution: fields.securitySolution,
+    assetType: fields.assetType,
+    cloud: fields.cloud,
+    owners: owners.map((o, i) => ({
+      ownerId: `OWN-NEW-${id}-${i}`,
+      role: o.role,
+      empNo: o.empNo,
+      empName: o.empName,
+      email: o.email,
+      deptPath: o.deptPath,
+      addedBy: me.empNo,
+      addedAt: now,
+    })),
+    duplicateIpTag: multiDup,
+    qualysDetectedAt: now,
+    updatedAt: now,
+    updatedBy: me.empName,
+    lastModifiedFieldChangeAt: now,
+  };
+  mockDb.assets.push(asset);
+
+  if (multiDup) {
+    // IP 중복 신규 등록 이상 징후 (§7.8 dup-ip-new)
+    const dupIp = fields.ips.find((ip) => matches.some((m) => m.ips.includes(ip)))!;
+    mockDb.dupIpNewEvents.push({
+      id: crypto.randomUUID(),
+      assetId: id,
+      hostname: asset.hostname,
+      ip: dupIp,
+      duplicateAssetIds: matches.map((m) => m.id),
+      occurredAt: now,
+    });
+  }
+  return { status: 'created', asset: { ...asset }, multiDup };
+}
+
+/** 단일 중복 → 기존 자산의 현업 담당자에 본인 추가 (PRD §3.3, F-NEW-4). */
+export async function addSelfAsBizOwner(existingId: string): Promise<Asset> {
+  const me = getCurrentUser();
+  const asset = await addOwner(existingId, 'biz', {
+    empNo: me.empNo,
+    empName: me.empName,
+    email: me.email,
+    deptPath: me.deptPath,
+  });
+  // IP 중복 정보 갱신 이상 징후 (§7.8 dup-ip-update)
+  mockDb.dupIpUpdateEvents.push({
+    id: crypto.randomUUID(),
+    assetId: existingId,
+    hostname: asset.hostname,
+    addedUser: me.empName,
+    occurredAt: new Date().toISOString(),
+  });
+  return asset;
 }
 
 /** [DEV] 다른 사용자가 자산을 수정한 상황 강제 트리거 — 충돌 모달 시연용 (F-4). */

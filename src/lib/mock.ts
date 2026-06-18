@@ -217,7 +217,49 @@ export const mockDb = {
   ] as LatestConfirmation[],
   searchEvents: [] as SearchEvent[],
   ownerChanges: [] as OwnerChangeEvent[],
+  // 이상 징후용 이벤트 로그 (대시보드 §7.8)
+  conflictEvents: [] as ConflictEvent[],
+  overwriteEvents: [] as OverwriteEvent[],
+  dupIpNewEvents: [] as DupIpNewEvent[],
+  dupIpUpdateEvents: [] as DupIpUpdateEvent[],
 };
+
+export type ConflictEvent = {
+  id: string;
+  assetId: string;
+  hostname: string;
+  userA: string;
+  userB: string;
+  occurredAt: string;
+};
+export type OverwriteEvent = {
+  id: string;
+  assetId: string;
+  hostname: string;
+  overwroteBy: string;
+  previousBy: string;
+  occurredAt: string;
+};
+export type DupIpNewEvent = {
+  id: string;
+  assetId: string;
+  hostname: string;
+  ip: string;
+  duplicateAssetIds: string[];
+  occurredAt: string;
+};
+export type DupIpUpdateEvent = {
+  id: string;
+  assetId: string;
+  hostname: string;
+  addedUser: string;
+  occurredAt: string;
+};
+
+let assetSeq = 900;
+export function nextAssetId(): string {
+  return `A-${assetSeq++}`;
+}
 
 export function findAssetsByIp(ip: string): Asset[] {
   return mockDb.assets.filter((a) => a.ips.includes(ip));

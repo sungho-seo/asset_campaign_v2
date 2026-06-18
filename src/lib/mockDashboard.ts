@@ -4,7 +4,8 @@
 export const CAMPAIGN = {
   totalAssets: 12847,
   totalEmployees: 3200,
-  startDate: '2026-06-15', // D+0
+  startDate: '2026-06-22', // D+0
+  endDate: '2026-07-17', // 캠페인 종료 (약 4주)
   weeks: 4,
 };
 
@@ -62,13 +63,16 @@ export type ProgressPoint = {
 
 function buildProgress(): ProgressPoint[] {
   const start = new Date(CAMPAIGN.startDate + 'T00:00:00+09:00');
+  const end = new Date(CAMPAIGN.endDate + 'T00:00:00+09:00');
+  const totalDays = Math.round((end.getTime() - start.getTime()) / 86400000);
   const out: ProgressPoint[] = [];
-  for (let d = 0; d <= 28; d++) {
+  for (let d = 0; d <= totalDays; d++) {
     const date = new Date(start);
     date.setDate(start.getDate() + d);
+    const f = d / totalDays;
     // 로지스틱 유사 증가
-    const identify = Math.round((28 * (d / 28) ** 0.7 + 1) * 10) / 10; // ~ 0→29%
-    const participate = Math.round((50 * (d / 28) ** 0.6 + 2) * 10) / 10; // ~ 0→52%
+    const identify = Math.round((28 * f ** 0.7 + 1) * 10) / 10; // ~ 0→29%
+    const participate = Math.round((50 * f ** 0.6 + 2) * 10) / 10; // ~ 0→52%
     out.push({
       dIndex: d,
       date: date.toISOString(),

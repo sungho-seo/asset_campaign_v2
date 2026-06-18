@@ -4,6 +4,7 @@ import { Toaster } from './components/feedback/Toaster';
 import { RequireNotice, RequireDashboard } from './routes/guards';
 import NoticePage from './routes/NoticePage';
 import NoticeDonePage from './routes/NoticeDonePage';
+import SearchPage from './routes/SearchPage';
 import Demo from './components/_demo/Demo';
 
 function PlaceholderPage({ title, phase }: { title: string; phase: string }) {
@@ -28,7 +29,7 @@ export default function App() {
             path="/search"
             element={
               <RequireNotice>
-                <PlaceholderPage title="자산 검색" phase="Phase 4" />
+                <SearchPage />
               </RequireNotice>
             }
           />

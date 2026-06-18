@@ -5,6 +5,7 @@ import { HourlyHeatmap } from '@/components/dashboard/HourlyHeatmap';
 import { AssetInfoSection } from '@/components/dashboard/AssetInfoSection';
 import { AbandonedCard } from '@/components/dashboard/AbandonedCard';
 import { AnomalySection } from '@/components/dashboard/AnomalySection';
+import { OrgSection } from '@/components/dashboard/OrgSection';
 
 /** 대시보드 (PRD §7) — 정보보호담당 구성원 전용. LG레드 강조 모듈. */
 export default function DashboardPage() {
@@ -29,6 +30,8 @@ export default function DashboardPage() {
         <AssetInfoSection />
         <AbandonedCard />
       </div>
+
+      <OrgSection />
 
       <AnomalySection />
     </div>

@@ -23,6 +23,8 @@ import type { AccessEntry, UpdatedAssetEntry, ProgressPoint } from '@/lib/mockDa
 import { ROLE_LABELS } from '@/lib/labels';
 import { formatDateTime } from '@/lib/format';
 import { useNoticeStore } from '@/stores/noticeStore';
+import { BIG_ORGS, ORG_TREES, hasHundredTeam } from '@/lib/mockOrganizations';
+import type { OrgNode } from '@/lib/mockOrganizations';
 
 const delay = (ms = 200) => new Promise((r) => setTimeout(r, ms));
 
@@ -310,4 +312,37 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
     default:
       return { columns: [], rows: [] };
   }
+}
+
+// ── §7.7 조직별 참여율 ──
+export type OrgCard = {
+  id: string;
+  name: string;
+  participateRate: number;
+  identifyRate: number | null;
+  members: number;
+  assets: number;
+  hasHundredTeam: boolean;
+};
+
+export async function getOrganizations(): Promise<OrgCard[]> {
+  await delay();
+  return BIG_ORGS.map((name) => {
+    const node = ORG_TREES[name]!;
+    const s = node.stats;
+    return {
+      id: node.id,
+      name: node.name,
+      participateRate: s.totalMembers ? s.participated / s.totalMembers : 0,
+      identifyRate: s.assetCount ? s.identifiedAssets / s.assetCount : null,
+      members: s.totalMembers,
+      assets: s.assetCount,
+      hasHundredTeam: hasHundredTeam(node),
+    };
+  });
+}
+
+export async function getOrgTree(id: string): Promise<OrgNode | undefined> {
+  await delay(150);
+  return ORG_TREES[id];
 }

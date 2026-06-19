@@ -6,6 +6,7 @@ import { SideDrawer } from '@/components/drawer/SideDrawer';
 import { getKpi, getAccessLog, getUpdatedAssets } from '@/lib/api/dashboard';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { AbandonedCard } from './AbandonedCard';
 
 const HINT_IDENTIFY = '5개 역할 중 누구라도 자산 정보를 갱신했거나 최신 정보임을 확인한 비율입니다.';
 const HINT_PARTICIPATE = '보유 자산 유무에 관계없이 안내 페이지에 응답한 임직원 비율입니다.';
@@ -16,8 +17,8 @@ export function KpiCards() {
 
   if (!kpi) {
     return (
-      <div className="grid grid-cols-4 gap-3">
-        {[0, 1, 2, 3].map((i) => (
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        {[0, 1, 2, 3, 4].map((i) => (
           <div key={i} className="h-32 animate-pulse rounded-lg bg-bg-soft" />
         ))}
       </div>
@@ -26,7 +27,7 @@ export function KpiCards() {
 
   return (
     <>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <KPICard
           label="식별률"
           icon={CheckCircle2}
@@ -70,6 +71,7 @@ export function KpiCards() {
           delta={{ value: `+${kpi.modifiedDelta} / +${kpi.newDelta}`, positive: true }}
           onClick={() => setPanel('update')}
         />
+        <AbandonedCard />
       </div>
 
       <AccessPanel open={panel === 'access'} onClose={() => setPanel(null)} />

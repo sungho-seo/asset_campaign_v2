@@ -18,10 +18,9 @@ const META: Record<AnomalyKey, { icon: LucideIcon; color: IconColor; desc: strin
   'owner-change': { icon: UserCog, color: 'blue', desc: '담당자 추가 / 삭제 이력' },
   'dup-ip-new': { icon: Copy, color: 'purple', desc: 'IP 다중 중복으로 신규 등록' },
   'dup-ip-update': { icon: RefreshCw, color: 'gray', desc: '단일 중복 → 현업 담당자 추가' },
-  'search-top-ip': { icon: Search, color: 'gray', desc: '검색 시도 Top 10 (IP)' },
-  'search-top-host': { icon: Search, color: 'gray', desc: '검색 시도 Top 10 (Hostname)' },
-  'search-top-person': { icon: Search, color: 'gray', desc: '검색 시도 Top 10 (담당자)' },
-  'zero-search': { icon: Search, color: 'gray', desc: '검색 0건 패턴' },
+  'search-top-ip': { icon: Search, color: 'gray', desc: '검색 시도 Top 100 (IP)' },
+  'search-top-host': { icon: Search, color: 'gray', desc: '검색 시도 Top 100 (Hostname)' },
+  'search-top-person': { icon: Search, color: 'gray', desc: '검색 시도 Top 100 (담당자)' },
 };
 
 const ANOMALY_KEYS: AnomalyKey[] = [
@@ -31,12 +30,7 @@ const ANOMALY_KEYS: AnomalyKey[] = [
   'dup-ip-new',
   'dup-ip-update',
 ];
-const SEARCH_KEYS: AnomalyKey[] = [
-  'search-top-ip',
-  'search-top-host',
-  'search-top-person',
-  'zero-search',
-];
+const SEARCH_KEYS: AnomalyKey[] = ['search-top-ip', 'search-top-host', 'search-top-person'];
 
 /** 이상 징후 / 충돌 (충돌·담당자·IP중복 계열) */
 export function AnomalySection() {

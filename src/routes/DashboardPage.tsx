@@ -4,7 +4,6 @@ import { KpiCards } from '@/components/dashboard/KpiCards';
 import { ProgressChart } from '@/components/dashboard/ProgressChart';
 import { HourlyHeatmap } from '@/components/dashboard/HourlyHeatmap';
 import { AssetInfoSection } from '@/components/dashboard/AssetInfoSection';
-import { AbandonedCard } from '@/components/dashboard/AbandonedCard';
 import { AnomalySection, SearchAnalysisSection } from '@/components/dashboard/AnomalySection';
 import { OrgSection } from '@/components/dashboard/OrgSection';
 import { StackedBar } from '@/components/dashboard/StackedBar';
@@ -34,9 +33,8 @@ export default function DashboardPage() {
         <AnomalySection />
       </div>
 
-      <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="mb-5">
         <SearchAnalysisSection />
-        <AbandonedCard />
       </div>
 
       <div className="mb-5">

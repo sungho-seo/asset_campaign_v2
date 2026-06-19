@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, ArrowDown } from 'lucide-react';
+import { Clock } from 'lucide-react';
+import { KPICard } from '@/components/kpi/KPICard';
 import { SideDrawer } from '@/components/drawer/SideDrawer';
 import { getAbandoned } from '@/lib/api/dashboard';
 import { cn } from '@/lib/cn';
@@ -13,38 +14,24 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'withAccess', label: '접속 이력 있음' },
 ];
 
+/** 방치 자산 — KPI 카드 레벨로 표시 + 3탭 드로어 (PRD §7.6). */
 export function AbandonedCard() {
   const { data } = useQuery({ queryKey: ['dashboard', 'abandoned'], queryFn: getAbandoned });
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<Tab>('all');
   const rows = data?.tabs[tab] ?? [];
+  const delta = data?.delta ?? 0;
 
   return (
     <>
-      <button
+      <KPICard
+        label="방치 자산"
+        icon={Clock}
+        value={data?.abandoned.toLocaleString() ?? '—'}
+        unit={data ? `/ ${data.total.toLocaleString()}` : undefined}
+        delta={{ value: `${delta > 0 ? '+' : '−'}${Math.abs(delta)}`, positive: delta < 0 }}
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-between rounded-lg border border-line bg-white px-5 py-4 text-left shadow-sm transition-colors hover:border-brand/40"
-      >
-        <div className="flex items-center gap-3">
-          <span className="grid h-9 w-9 place-items-center rounded-md bg-bg-soft text-text-3">
-            <Clock className="h-4 w-4" />
-          </span>
-          <div>
-            <div className="font-mono text-[11px] uppercase tracking-wider text-text-3">방치 자산</div>
-            <div className="mt-0.5 flex items-baseline gap-1.5">
-              <span className="text-[22px] font-semibold tracking-tighter2 text-danger">
-                {data?.abandoned.toLocaleString() ?? '—'}
-              </span>
-              <span className="font-mono text-[12px] text-text-3">
-                / {data?.total.toLocaleString()}건
-              </span>
-            </div>
-          </div>
-        </div>
-        <span className="flex items-center gap-1 font-mono text-[12px] text-success">
-          <ArrowDown className="h-3 w-3" /> {data?.delta} (전일 대비)
-        </span>
-      </button>
+      />
 
       <SideDrawer
         open={open}

@@ -15,7 +15,6 @@ import {
   searchTopIp,
   searchTopHost,
   searchTopPerson,
-  zeroSearches,
   dupEditSeed,
   overwriteSeed,
   ownerChangeSeed,
@@ -243,8 +242,7 @@ export type AnomalyKey =
   | 'dup-ip-update'
   | 'search-top-ip'
   | 'search-top-host'
-  | 'search-top-person'
-  | 'zero-search';
+  | 'search-top-person';
 
 export type AnomalySummaryItem = {
   key: AnomalyKey;
@@ -261,10 +259,9 @@ export async function getAnomalySummary(): Promise<AnomalySummaryItem[]> {
     { key: 'owner-change', label: '담당자 변경', count: ownerChangeSeed.length + mockDb.ownerChanges.length, severity: 'info' },
     { key: 'dup-ip-new', label: 'IP 중복 → 신규 등록', count: mockDb.dupIpNewEvents.length, severity: 'warn' },
     { key: 'dup-ip-update', label: 'IP 중복 → 정보 갱신', count: mockDb.dupIpUpdateEvents.length, severity: 'info' },
-    { key: 'search-top-ip', label: '검색률 Top 10 (IP)', count: searchTopIp.length, severity: 'info' },
-    { key: 'search-top-host', label: '검색률 Top 10 (Hostname)', count: searchTopHost.length, severity: 'info' },
-    { key: 'search-top-person', label: '검색률 Top 10 (사람)', count: searchTopPerson.length, severity: 'info' },
-    { key: 'zero-search', label: '검색 0건 패턴', count: zeroSearches.length, severity: 'warn' },
+    { key: 'search-top-ip', label: '검색률 Top 100 (IP)', count: searchTopIp.length, severity: 'info' },
+    { key: 'search-top-host', label: '검색률 Top 100 (Hostname)', count: searchTopHost.length, severity: 'info' },
+    { key: 'search-top-person', label: '검색률 Top 100 (사람)', count: searchTopPerson.length, severity: 'info' },
   ];
 }
 
@@ -310,11 +307,6 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       return { columns: ['Hostname', '검색 시도', '검색자 수'], rows: searchTopHost.map((r) => [r.key, String(r.attempts), String(r.searchers)]) };
     case 'search-top-person':
       return { columns: ['담당자', '검색 시도', '검색자 수'], rows: searchTopPerson.map((r) => [r.key, String(r.attempts), String(r.searchers)]) };
-    case 'zero-search':
-      return {
-        columns: ['검색어', '검색자', '시점', '신규 등록'],
-        rows: zeroSearches.map((z) => [z.query, z.searcher, formatDateTime(z.at), z.proceeded ? '진행' : '미진행']),
-      };
     default:
       return { columns: [], rows: [] };
   }

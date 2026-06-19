@@ -5,7 +5,7 @@ export const CAMPAIGN = {
   totalAssets: 12847,
   totalEmployees: 3200,
   startDate: '2026-06-22', // D+0
-  endDate: '2026-07-20', // D+28 (정확히 4주, 주 간격 동일)
+  endDate: '2026-07-17', // D+25 (마지막 주는 4일 — X축 눈금 6/22·6/29·7/6·7/13·7/17)
   weeks: 4,
 };
 

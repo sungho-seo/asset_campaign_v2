@@ -83,6 +83,18 @@ deploy/                     # install.sh · update.sh · asset-campaign-v2.servi
 검색 정책·식별률 계산 로직은 mock에서도 PRD와 동일하게 적용됩니다.
 API 계약(엔드포인트/요청/응답/권한/동시수정)은 [`src/lib/api/README.md`](src/lib/api/README.md) 참고.
 
+## 대시보드 전용 모드 (v1 링크 진입)
+
+v2는 기본적으로 **대시보드 전용**으로 동작합니다 (`src/config.ts`의 `DASHBOARD_ONLY=true`).
+v1에서 링크로 진입하면 대시보드만 노출되고, 안내/임직원 화면은 숨겨집니다(코드는 유지, 라우트·탭만 비활성).
+
+```bash
+npm run dev                             # 대시보드 전용 (기본)
+VITE_DASHBOARD_ONLY=false npm run dev   # 전체 앱(안내·임직원·대시보드)
+```
+
+대시보드 코드 구조·데이터 교체 지점은 **[`src/components/dashboard/README.md`](src/components/dashboard/README.md)** 에 정리되어 있습니다 (개발자 인계용).
+
 데모 편의 기능:
 - `/demo` — 공통 컴포넌트 변형 시연
 - 자산 편집 패널의 **[DEV] 외부 수정 트리거** 버튼 — 동시 수정 충돌 모달 시연 (개발 모드 전용)

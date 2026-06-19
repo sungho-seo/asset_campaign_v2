@@ -5,6 +5,7 @@ import { Toaster } from './components/feedback/Toaster';
 import { ErrorBoundary } from './components/feedback/ErrorBoundary';
 import { PageLoader } from './components/feedback/PageLoader';
 import { RequireNotice, RequireDashboard } from './routes/guards';
+import { DASHBOARD_ONLY } from './config';
 import NoticePage from './routes/NoticePage';
 import NoticeDonePage from './routes/NoticeDonePage';
 import SearchPage from './routes/SearchPage';
@@ -20,29 +21,45 @@ export default function App() {
       <main>
         <ErrorBoundary>
           <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<Navigate to="/notice" replace />} />
-              <Route path="/notice" element={<NoticePage />} />
-              <Route path="/notice/done" element={<NoticeDonePage />} />
-              <Route
-                path="/search"
-                element={
-                  <RequireNotice>
-                    <SearchPage />
-                  </RequireNotice>
-                }
-              />
-              <Route
-                path="/dashboard"
-                element={
-                  <RequireDashboard>
-                    <DashboardPage />
-                  </RequireDashboard>
-                }
-              />
-              <Route path="/demo" element={<Demo />} />
-              <Route path="*" element={<Navigate to="/notice" replace />} />
-            </Routes>
+            {DASHBOARD_ONLY ? (
+              // v1 링크 진입 — 대시보드 전용. 안내/임직원 라우트는 숨김.
+              <Routes>
+                <Route
+                  path="/dashboard"
+                  element={
+                    <RequireDashboard>
+                      <DashboardPage />
+                    </RequireDashboard>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            ) : (
+              // 전체 앱 (안내 · 임직원 · 대시보드) — 개발/통합 모드
+              <Routes>
+                <Route path="/" element={<Navigate to="/notice" replace />} />
+                <Route path="/notice" element={<NoticePage />} />
+                <Route path="/notice/done" element={<NoticeDonePage />} />
+                <Route
+                  path="/search"
+                  element={
+                    <RequireNotice>
+                      <SearchPage />
+                    </RequireNotice>
+                  }
+                />
+                <Route
+                  path="/dashboard"
+                  element={
+                    <RequireDashboard>
+                      <DashboardPage />
+                    </RequireDashboard>
+                  }
+                />
+                <Route path="/demo" element={<Demo />} />
+                <Route path="*" element={<Navigate to="/notice" replace />} />
+              </Routes>
+            )}
           </Suspense>
         </ErrorBoundary>
       </main>

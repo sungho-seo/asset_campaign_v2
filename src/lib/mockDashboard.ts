@@ -201,14 +201,23 @@ export const abandonedByTab: { all: AbandonedRow[]; withOwner: AbandonedRow[]; w
     { id: 'ab1', hostname: 'unknown-srv-201', note: '담당자 없음 · 미열람' },
     { id: 'ab2', hostname: 'unknown-srv-202', note: '담당자 없음 · 미열람' },
     { id: 'ab3', hostname: 'dev-pc-330', note: '담당자 없음 · 미열람' },
+    { id: 'ab8', hostname: 'unknown-srv-310', note: '담당자 없음 · 미열람' },
+    { id: 'ab9', hostname: 'lab-vm-052', note: '담당자 없음 · 미열람' },
+    { id: 'ab10', hostname: 'old-build-09', note: '담당자 없음 · 미열람' },
   ],
   withOwner: [
     { id: 'ab4', hostname: 'ha-line-07', note: '담당자 2명 지정, 갱신 안 함' },
     { id: 'ab5', hostname: 'vs-test-11', note: '담당자 1명 지정, 갱신 안 함' },
+    { id: 'ab11', hostname: 'ms-sim-22', note: '담당자 3명 지정, 갱신 안 함' },
+    { id: 'ab12', hostname: 'es-edge-15', note: '담당자 1명 지정, 갱신 안 함' },
+    { id: 'ab13', hostname: 'cs-batch-04', note: '담당자 2명 지정, 갱신 안 함' },
   ],
   withAccess: [
     { id: 'ab6', hostname: 'sec-proxy-03', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
     { id: 'ab7', hostname: 'ms-db-replica', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
+    { id: 'ab14', hostname: 'ha-ctrl-44', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
+    { id: 'ab15', hostname: 'vs-gw-02', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
+    { id: 'ab16', hostname: 'kr-was-08', note: '담당자 접속 이력 있음 · 보고도 갱신 안 함' },
   ],
 };
 
@@ -220,16 +229,25 @@ export const searchTopIp: SearchTopRow[] = [
   { key: '1.1.1.1', attempts: 31, searchers: 14 },
   { key: '10.70.1.10', attempts: 22, searchers: 6 },
   { key: '2.2.2.2', attempts: 19, searchers: 8 },
+  { key: '10.80.0.5', attempts: 16, searchers: 5 },
+  { key: '172.20.5.30', attempts: 13, searchers: 4 },
+  { key: '10.60.2.20', attempts: 11, searchers: 4 },
 ];
 export const searchTopHost: SearchTopRow[] = [
   { key: 'visz-web-01', attempts: 41, searchers: 10 },
   { key: 'sec-siem-01', attempts: 27, searchers: 7 },
   { key: 'es-sys-dev-01', attempts: 18, searchers: 5 },
+  { key: 'cs-gcp-api', attempts: 15, searchers: 6 },
+  { key: 'ms-azure-db', attempts: 12, searchers: 4 },
+  { key: 'kr-sales-portal', attempts: 10, searchers: 3 },
 ];
 export const searchTopPerson: SearchTopRow[] = [
   { key: '서성호', attempts: 33, searchers: 4 },
   { key: '이몽룡', attempts: 25, searchers: 6 },
   { key: '정약용', attempts: 17, searchers: 3 },
+  { key: '박문수', attempts: 14, searchers: 5 },
+  { key: '최영실', attempts: 12, searchers: 4 },
+  { key: '윤서연', attempts: 9, searchers: 3 },
 ];
 export type DupEditSeed = {
   id: string; ip: string; hostname: string;
@@ -238,6 +256,9 @@ export type DupEditSeed = {
 export const dupEditSeed: DupEditSeed[] = [
   { id: 'de1', ip: '1.1.1.1', hostname: 'ha-ctrl-01', userA: '박문수', teamA: '제어연구팀', userB: '김현수', teamB: '제어연구팀', occurredAt: '2026-06-23T10:00:00+09:00' },
   { id: 'de2', ip: '10.70.1.10', hostname: 'es-sys-dev-01', userA: '윤서연', teamA: '시스템개발팀', userB: '이몽룡', teamB: '인프라운영팀', occurredAt: '2026-06-24T13:11:00+09:00' },
+  { id: 'de3', ip: '10.20.30.40', hostname: 'visz-web-01', userA: '서성호', teamA: '정보보호가시화팀', userB: '이몽룡', teamB: '인프라운영팀', occurredAt: '2026-06-26T09:47:00+09:00' },
+  { id: 'de4', ip: '10.80.0.5', hostname: 'sec-siem-01', userA: '정약용', teamA: '보안운영팀', userB: '정우성', teamB: '보안운영팀', occurredAt: '2026-06-27T11:20:00+09:00' },
+  { id: 'de5', ip: '10.60.2.20', hostname: 'kr-sales-portal', userA: '박문수', teamA: '영업기획팀', userB: '한지민', teamB: '기획1팀', occurredAt: '2026-06-27T16:05:00+09:00' },
 ];
 export type OverwriteSeed = {
   id: string; ip: string; hostname: string;
@@ -245,6 +266,10 @@ export type OverwriteSeed = {
 };
 export const overwriteSeed: OverwriteSeed[] = [
   { id: 'ov1', ip: '10.80.0.5', hostname: 'sec-siem-01', overwroteBy: '정우성', overwroteTeam: '보안운영팀', previousBy: '정약용', previousTeam: '보안운영팀', occurredAt: '2026-06-24T15:30:00+09:00' },
+  { id: 'ov2', ip: '172.16.8.10', hostname: 'visz-cloud-dw', overwroteBy: '서성호', overwroteTeam: '정보보호가시화팀', previousBy: '정약용', previousTeam: '보안운영팀', occurredAt: '2026-06-25T10:12:00+09:00' },
+  { id: 'ov3', ip: '172.21.3.12', hostname: 'ms-azure-db', overwroteBy: '박문수', overwroteTeam: '제어연구팀', previousBy: '오세훈', previousTeam: '회로설계팀', occurredAt: '2026-06-26T14:48:00+09:00' },
+  { id: 'ov4', ip: '172.20.5.30', hostname: 'cs-gcp-api', overwroteBy: '최영실', overwroteTeam: '플랫폼개발팀', previousBy: '김춘향', previousTeam: 'SM팀', occurredAt: '2026-06-27T09:33:00+09:00' },
+  { id: 'ov5', ip: '10.70.1.10', hostname: 'es-sys-dev-01', overwroteBy: '윤서연', overwroteTeam: '시스템개발팀', previousBy: '이몽룡', previousTeam: '인프라운영팀', occurredAt: '2026-06-28T13:02:00+09:00' },
 ];
 export type OwnerChangeSeed = {
   id: string; ip: string; hostname: string;
@@ -253,6 +278,37 @@ export type OwnerChangeSeed = {
 export const ownerChangeSeed: OwnerChangeSeed[] = [
   { id: 'oc1', ip: '2.2.2.2', hostname: 'vs-platform-a', actor: '이서진', actorTeam: '플랫폼개발팀', action: 'add', target: '이서진', targetTeam: '플랫폼개발팀', role: '현업', occurredAt: '2026-06-25T09:00:00+09:00' },
   { id: 'oc2', ip: '10.70.1.10', hostname: 'es-sys-dev-01', actor: '윤아름', actorTeam: 'SM팀', action: 'remove', target: '김춘향', targetTeam: 'SM팀', role: 'SM', occurredAt: '2026-06-25T16:40:00+09:00' },
+  { id: 'oc3', ip: '10.20.30.40', hostname: 'visz-web-01', actor: '서성호', actorTeam: '정보보호가시화팀', action: 'add', target: '김현수', targetTeam: '제어연구팀', role: 'IT', occurredAt: '2026-06-26T10:30:00+09:00' },
+  { id: 'oc4', ip: '10.80.0.5', hostname: 'sec-siem-01', actor: '정우성', actorTeam: '보안운영팀', action: 'remove', target: '윤서연', targetTeam: '시스템개발팀', role: '서버 담당자(부)', occurredAt: '2026-06-27T15:10:00+09:00' },
+  { id: 'oc5', ip: '172.20.5.30', hostname: 'cs-gcp-api', actor: '최영실', actorTeam: '플랫폼개발팀', action: 'add', target: '강민호', targetTeam: '운영팀', role: 'SM', occurredAt: '2026-06-28T11:55:00+09:00' },
+];
+
+export type DupIpNewSeed = {
+  id: string; ip: string; hostname: string;
+  duplicates: { ip: string; host: string; owner: string }[]; occurredAt: string;
+};
+export const dupIpNewSeed: DupIpNewSeed[] = [
+  { id: 'din1', ip: '2.2.2.2', hostname: 'vs-platform-new', occurredAt: '2026-06-24T10:20:00+09:00',
+    duplicates: [{ ip: '2.2.2.2', host: 'vs-platform-a', owner: '최영실' }, { ip: '2.2.2.2', host: 'vs-platform-b', owner: '윤서연' }] },
+  { id: 'din2', ip: '10.50.7.7', hostname: 'ha-edge-new', occurredAt: '2026-06-25T13:40:00+09:00',
+    duplicates: [{ ip: '10.50.7.7', host: 'ha-edge-01', owner: '박문수' }, { ip: '10.50.7.7', host: 'ha-edge-02', owner: '김현수' }] },
+  { id: 'din3', ip: '172.30.1.5', hostname: 'cs-api-canary', occurredAt: '2026-06-26T09:05:00+09:00',
+    duplicates: [{ ip: '172.30.1.5', host: 'cs-api-blue', owner: '최영실' }, { ip: '172.30.1.5', host: 'cs-api-green', owner: '강민호' }] },
+  { id: 'din4', ip: '10.90.2.2', hostname: 'ms-sim-new', occurredAt: '2026-06-27T14:25:00+09:00',
+    duplicates: [{ ip: '10.90.2.2', host: 'ms-sim-01', owner: '오세훈' }, { ip: '10.90.2.2', host: 'ms-sim-02', owner: '박문수' }] },
+  { id: 'din5', ip: '10.61.0.9', hostname: 'kr-was-new', occurredAt: '2026-06-28T10:50:00+09:00',
+    duplicates: [{ ip: '10.61.0.9', host: 'kr-was-01', owner: '한지민' }, { ip: '10.61.0.9', host: 'kr-was-02', owner: '박문수' }] },
+];
+
+export type DupIpUpdateSeed = {
+  id: string; ip: string; hostname: string; addedUser: string; addedTeam: string; occurredAt: string;
+};
+export const dupIpUpdateSeed: DupIpUpdateSeed[] = [
+  { id: 'diu1', ip: '1.1.1.1', hostname: 'ha-ctrl-01', addedUser: '서성호', addedTeam: '정보보호가시화팀', occurredAt: '2026-06-23T11:15:00+09:00' },
+  { id: 'diu2', ip: '10.80.0.5', hostname: 'sec-siem-01', addedUser: '김현수', addedTeam: '제어연구팀', occurredAt: '2026-06-24T16:30:00+09:00' },
+  { id: 'diu3', ip: '172.21.3.12', hostname: 'ms-azure-db', addedUser: '최영실', addedTeam: '플랫폼개발팀', occurredAt: '2026-06-25T09:40:00+09:00' },
+  { id: 'diu4', ip: '10.60.2.20', hostname: 'kr-sales-portal', addedUser: '한지민', addedTeam: '기획1팀', occurredAt: '2026-06-26T13:18:00+09:00' },
+  { id: 'diu5', ip: '172.16.8.10', hostname: 'visz-cloud-dw', addedUser: '윤서연', addedTeam: '시스템개발팀', occurredAt: '2026-06-27T10:05:00+09:00' },
 ];
 
 export type ZeroSearchRow = { id: string; query: string; searcher: string; at: string; proceeded: boolean };

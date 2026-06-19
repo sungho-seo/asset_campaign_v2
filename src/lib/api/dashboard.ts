@@ -18,6 +18,8 @@ import {
   dupEditSeed,
   overwriteSeed,
   ownerChangeSeed,
+  dupIpNewSeed,
+  dupIpUpdateSeed,
 } from '@/lib/mockDashboard';
 import type { AccessEntry, UpdatedAssetEntry, ProgressPoint } from '@/lib/mockDashboard';
 import { ROLE_LABELS } from '@/lib/labels';
@@ -245,8 +247,8 @@ export async function getAnomalySummary(): Promise<AnomalySummaryItem[]> {
     { key: 'dup-edit', label: '중복 수정', count: dupEditSeed.length + mockDb.conflictEvents.length, severity: 'danger' },
     { key: 'overwrite', label: '덮어쓰기 결정', count: overwriteSeed.length + mockDb.overwriteEvents.length, severity: 'warn' },
     { key: 'owner-change', label: '담당자 변경', count: ownerChangeSeed.length + mockDb.ownerChanges.length, severity: 'info' },
-    { key: 'dup-ip-new', label: 'IP 중복 → 신규 등록', count: mockDb.dupIpNewEvents.length, severity: 'warn' },
-    { key: 'dup-ip-update', label: 'IP 중복 → 정보 갱신', count: mockDb.dupIpUpdateEvents.length, severity: 'info' },
+    { key: 'dup-ip-new', label: 'IP 중복 → 신규 등록', count: dupIpNewSeed.length + mockDb.dupIpNewEvents.length, severity: 'warn' },
+    { key: 'dup-ip-update', label: 'IP 중복 → 정보 갱신', count: dupIpUpdateSeed.length + mockDb.dupIpUpdateEvents.length, severity: 'info' },
     { key: 'search-top-ip', label: '검색률 Top 100 (IP)', count: searchTopIp.length, severity: 'info' },
     { key: 'search-top-host', label: '검색률 Top 100 (Hostname)', count: searchTopHost.length, severity: 'info' },
     { key: 'search-top-person', label: '검색률 Top 100 (사람)', count: searchTopPerson.length, severity: 'info' },
@@ -365,14 +367,19 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       };
     }
     case 'dup-ip-new': {
-      const rows: IncidentRow[] = mockDb.dupIpNewEvents.map((e) => ({
-        id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
-        duplicates: e.duplicateAssetIds.map((aid) => {
-          const a = mockDb.assets.find((x) => x.id === aid);
-          return { ip: a?.ips.join(', ') ?? e.ip, host: a?.hostname ?? aid, owner: a?.owners.map((o) => o.empName).join(', ') || '-' };
-        }),
-      }));
-      const times = mockDb.dupIpNewEvents.map((e) => e.occurredAt);
+      const rows: IncidentRow[] = [
+        ...dupIpNewSeed.map((e) => ({
+          id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt), duplicates: e.duplicates,
+        })),
+        ...mockDb.dupIpNewEvents.map((e) => ({
+          id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
+          duplicates: e.duplicateAssetIds.map((aid) => {
+            const a = mockDb.assets.find((x) => x.id === aid);
+            return { ip: a?.ips.join(', ') ?? e.ip, host: a?.hostname ?? aid, owner: a?.owners.map((o) => o.empName).join(', ') || '-' };
+          }),
+        })),
+      ];
+      const times = [...dupIpNewSeed, ...mockDb.dupIpNewEvents].map((e) => e.occurredAt);
       return {
         key, desc: '동일 IP 자산이 2건 이상 존재하는 상태에서 신규 등록된 자산. 동일 IP 자산 목록을 함께 확인하세요.',
         stats: eventStats(rows.length, times), rows,
@@ -381,11 +388,17 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       };
     }
     case 'dup-ip-update': {
-      const rows: IncidentRow[] = mockDb.dupIpUpdateEvents.map((e) => ({
-        id: e.id, ip: ipOf(e.assetId), host: e.hostname, when: formatDateTime(e.occurredAt),
-        added: { name: e.addedUser, team: teamOfName(e.addedUser) },
-      }));
-      const times = mockDb.dupIpUpdateEvents.map((e) => e.occurredAt);
+      const rows: IncidentRow[] = [
+        ...dupIpUpdateSeed.map((e) => ({
+          id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
+          added: { name: e.addedUser, team: e.addedTeam },
+        })),
+        ...mockDb.dupIpUpdateEvents.map((e) => ({
+          id: e.id, ip: ipOf(e.assetId), host: e.hostname, when: formatDateTime(e.occurredAt),
+          added: { name: e.addedUser, team: teamOfName(e.addedUser) },
+        })),
+      ];
+      const times = [...dupIpUpdateSeed, ...mockDb.dupIpUpdateEvents].map((e) => e.occurredAt);
       return {
         key, desc: '단일 IP 중복 발견 시 기존 자산의 현업 담당자로 본인이 추가된 케이스.',
         stats: eventStats(rows.length, times), rows,

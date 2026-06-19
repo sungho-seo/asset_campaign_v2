@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, ChevronDown, Trophy, Star, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, Trophy, Star, CheckCircle2, Search, Download } from 'lucide-react';
 import { Panel } from '@/components/layout/Panel';
 import { SideDrawer } from '@/components/drawer/SideDrawer';
 import { getOrganizations, getOrgTree } from '@/lib/api/dashboard';
 import type { OrgNode } from '@/lib/mockOrganizations';
+import { downloadCsv } from '@/lib/csv';
 import { cn } from '@/lib/cn';
 
 type SortKey = 'participate' | 'identify' | 'update';
@@ -64,13 +65,40 @@ function OrgTreeDrawer({ orgId, onClose }: { orgId: string | null; onClose: () =
     enabled: !!orgId,
   });
   const [sortKey, setSortKey] = useState<SortKey>('participate');
+  const [filter, setFilter] = useState('');
 
   const stat = root?.stats;
+  const children = root?.children ?? [];
+  const visible = filter.trim() ? filterTree(children, filter.trim().toLowerCase()) : children;
+
+  const exportCsv = () => {
+    if (!root) return;
+    const rows: string[][] = [];
+    const walk = (nodes: OrgNode[], depth: number) => {
+      for (const n of sortNodes(nodes, sortKey)) {
+        const p = n.stats.totalMembers ? n.stats.participated / n.stats.totalMembers : 0;
+        rows.push([
+          '  '.repeat(depth) + n.name,
+          pct(p),
+          n.stats.assetCount ? pct(n.stats.identifiedAssets / n.stats.assetCount) : '-',
+          String(n.stats.totalMembers),
+          String(n.stats.assetCount),
+          String(n.stats.updateCount),
+        ]);
+        if (n.children) walk(n.children, depth + 1);
+      }
+    };
+    walk(visible, 0);
+    downloadCsv(`org-${root.id}.csv`, ['조직', '참여율', '식별률', '구성원', '자산', '갱신'], rows);
+  };
 
   return (
     <SideDrawer
       open={!!orgId}
-      onClose={onClose}
+      onClose={() => {
+        setFilter('');
+        onClose();
+      }}
       width={900}
       padded={false}
       eyebrow="조직별 참여율"
@@ -83,17 +111,34 @@ function OrgTreeDrawer({ orgId, onClose }: { orgId: string | null; onClose: () =
           : undefined
       }
       toolbar={
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] text-text-3">정렬</span>
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="h-8 rounded-md border border-line bg-white px-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-brand/30"
-          >
-            <option value="participate">참여율</option>
-            <option value="identify">식별률</option>
-            <option value="update">갱신 건수</option>
-          </select>
+        <div className="flex flex-1 items-center justify-between gap-2">
+          <div className="relative max-w-[240px] flex-1">
+            <Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-text-4" />
+            <input
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="조직 / 법인명 필터"
+              className="h-8 w-full rounded-md border border-line bg-white pl-7 pr-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-brand/30"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={sortKey}
+              onChange={(e) => setSortKey(e.target.value as SortKey)}
+              className="h-8 rounded-md border border-line bg-white px-2 text-xs text-text focus:outline-none focus:ring-2 focus:ring-brand/30"
+            >
+              <option value="participate">참여율</option>
+              <option value="identify">식별률</option>
+              <option value="update">갱신 건수</option>
+            </select>
+            <button
+              type="button"
+              onClick={exportCsv}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line bg-white px-3 text-xs font-medium text-text-2 hover:bg-bg-soft"
+            >
+              <Download className="h-3 w-3" /> CSV
+            </button>
+          </div>
         </div>
       }
     >
@@ -107,10 +152,27 @@ function OrgTreeDrawer({ orgId, onClose }: { orgId: string | null; onClose: () =
           <div className="text-right">갱신</div>
           <div className="text-center">배지</div>
         </div>
-        {root && <TreeRows nodes={root.children ?? []} depth={0} sortKey={sortKey} />}
+        {root && <TreeRows nodes={visible} depth={0} sortKey={sortKey} />}
+        {root && visible.length === 0 && (
+          <p className="py-8 text-center text-[12.5px] text-text-3">조건에 맞는 조직이 없습니다.</p>
+        )}
       </div>
     </SideDrawer>
   );
+}
+
+/** 이름이 매칭되거나 하위에 매칭 노드가 있으면 유지 (가지치기). */
+function filterTree(nodes: OrgNode[], needle: string): OrgNode[] {
+  const out: OrgNode[] = [];
+  for (const n of nodes) {
+    if (n.name.toLowerCase().includes(needle)) {
+      out.push(n);
+    } else if (n.children) {
+      const kids = filterTree(n.children, needle);
+      if (kids.length) out.push({ ...n, children: kids });
+    }
+  }
+  return out;
 }
 
 function sortNodes(nodes: OrgNode[], key: SortKey): OrgNode[] {

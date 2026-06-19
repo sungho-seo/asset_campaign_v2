@@ -30,7 +30,7 @@ export const BIG_ORGS = [
   '한국영업본부', '해외영업본부',
   'CTO부문', 'CSO부문', 'CFO부문', 'CHO부문', 'CRO부문',
   'CS센터', '생산기술원', '품질경영센터', '디자인경영센터', '글로벌오퍼레이션센터',
-  '기타',
+  '해외법인', '기타',
 ];
 
 function mulberry32(seed: number) {
@@ -131,6 +131,36 @@ function buildEtc(): OrgNode {
   return { id: '기타', name: '기타', level: 0, children: teams, stats: aggregate(teams) };
 }
 
+// '해외법인' — 80~100개 법인 평면 목록 (사이드 패널에서 목록으로 확인)
+function buildOverseas(): OrgNode {
+  const rng = mulberry32(hashSeed('해외법인'));
+  const countries = [
+    '미국', '독일', '영국', '프랑스', '이탈리아', '스페인', '폴란드', '체코', '러시아', '튀르키예',
+    '중국', '일본', '인도', '베트남', '태국', '인도네시아', '말레이시아', '싱가포르', '필리핀', '대만',
+    '브라질', '멕시코', '아르헨티나', '칠레', '콜롬비아', '캐나다', '호주', '뉴질랜드', '남아공', '이집트',
+    'UAE', '사우디', '카타르', '네덜란드', '벨기에', '스웨덴', '노르웨이', '핀란드', '오스트리아', '스위스',
+    '헝가리', '루마니아', '그리스', '포르투갈', '아일랜드',
+  ];
+  const kinds = ['판매법인', '생산법인', '연구법인', '지주법인'];
+  const corps: OrgNode[] = [];
+  let n = 0;
+  for (const c of countries) {
+    const cnt = 1 + Math.floor(rng() * 3); // 국가당 1~3 법인 → 총 ~90개
+    for (let k = 0; k < cnt; k++) {
+      const members = makeMembers(rng, `ov-${n}`, 2 + Math.floor(rng() * 6));
+      corps.push({
+        id: `해외법인-${n}`,
+        name: `${c} ${kinds[k % kinds.length]}${cnt > 1 ? ` ${k + 1}` : ''}`,
+        level: 1,
+        members,
+        stats: leafStats(members, rng),
+      });
+      n++;
+    }
+  }
+  return { id: '해외법인', name: '해외법인', level: 0, children: corps, stats: aggregate(corps) };
+}
+
 // CRO부문에 정보보호담당 > 정보보호가시화팀(서성호 포함) 주입 — 임직원 화면과 일관성
 function injectInfoSec(node: OrgNode): OrgNode {
   const rng = mulberry32(hashSeed('정보보호가시화팀'));
@@ -157,6 +187,7 @@ function injectInfoSec(node: OrgNode): OrgNode {
 export const ORG_TREES: Record<string, OrgNode> = Object.fromEntries(
   BIG_ORGS.map((name) => {
     if (name === '기타') return [name, buildEtc()];
+    if (name === '해외법인') return [name, buildOverseas()];
     if (name === 'CRO부문') return [name, injectInfoSec(buildTree(name))];
     return [name, buildTree(name)];
   }),

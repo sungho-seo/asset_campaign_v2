@@ -155,12 +155,29 @@ export async function getAssetTypeSummary(): Promise<AssetTypeSummary> {
   };
 }
 
+const teamOf = (deptPath: string) => deptPath.split('>').pop()?.trim() ?? '—';
+
+// 알려진 mock 인물 → 팀 (라이브 이벤트 표기용)
+const NAME_TEAM: Record<string, string> = {
+  서성호: '정보보호가시화팀',
+  박문수: '제어연구팀',
+  김춘향: 'SM팀',
+  이몽룡: '인프라운영팀',
+  최영실: '플랫폼개발팀',
+  정약용: '보안운영팀',
+  윤서연: '시스템개발팀',
+};
+const teamOfName = (name: string) => NAME_TEAM[name] ?? '—';
+
 export type AssetListRow = {
   id: string;
+  ip: string;
   hostname: string;
-  sub?: string;
+  detail: string;
   tag?: 'modified' | 'new' | 'unassigned';
   csp?: string;
+  ownerName?: string;
+  ownerTeam?: string;
 };
 
 export async function getAssetList(
@@ -168,57 +185,33 @@ export async function getAssetList(
 ): Promise<AssetListRow[]> {
   await delay(150);
   if (kind === 'retired') {
-    return retiredAssets.map((r) => ({ id: r.id, hostname: r.hostname, sub: `${r.lastOwner} · ${r.retiredAt}` }));
+    return retiredAssets.map((r) => ({
+      id: r.id,
+      ip: r.ip,
+      hostname: r.hostname,
+      detail: `퇴사 ${r.retiredAt}`,
+      ownerName: r.lastOwner,
+      ownerTeam: '퇴사 처리',
+    }));
   }
   const pick = mockDb.assets.filter((a) => {
     if (kind === 'onprem') return a.assetType === 'on-premise';
     if (kind === 'cloud') return a.assetType === 'cloud';
     return a.owners.length === 0;
   });
-  return pick.map((a) => ({
-    id: a.id,
-    hostname: a.hostname,
-    sub: `${a.os} ${a.osVersion}${a.servicePurpose ? ' · ' + a.servicePurpose : ''}`,
-    tag: kind === 'unassigned' ? 'unassigned' : isNew(a.id) ? 'new' : a.updatedAt ? 'modified' : undefined,
-    csp: a.cloud?.csp,
-  }));
-}
-
-// IP 중복 신규 — 신규 자산 + 동일 IP 자산 N건 아코디언
-export type DupIpNewDetail = {
-  id: string;
-  hostname: string;
-  ip: string;
-  at: string;
-  duplicates: { id: string; hostname: string; owners: string }[];
-};
-export async function getDupIpNew(): Promise<DupIpNewDetail[]> {
-  await delay(150);
-  return mockDb.dupIpNewEvents.map((e) => ({
-    id: e.id,
-    hostname: e.hostname,
-    ip: e.ip,
-    at: formatDateTime(e.occurredAt),
-    duplicates: e.duplicateAssetIds.map((aid) => {
-      const a = mockDb.assets.find((x) => x.id === aid);
-      return {
-        id: aid,
-        hostname: a?.hostname ?? aid,
-        owners: a?.owners.map((o) => o.empName).join(', ') || '-',
-      };
-    }),
-  }));
-}
-
-export type DupIpUpdateDetail = { id: string; hostname: string; addedUser: string; at: string };
-export async function getDupIpUpdate(): Promise<DupIpUpdateDetail[]> {
-  await delay(150);
-  return mockDb.dupIpUpdateEvents.map((e) => ({
-    id: e.id,
-    hostname: e.hostname,
-    addedUser: e.addedUser,
-    at: formatDateTime(e.occurredAt),
-  }));
+  return pick.map((a) => {
+    const biz = a.owners.find((o) => o.role === 'biz') ?? a.owners[0];
+    return {
+      id: a.id,
+      ip: a.ips.join(', '),
+      hostname: a.hostname,
+      detail: `${a.os} ${a.osVersion}${a.servicePurpose ? ' · ' + a.servicePurpose : ''}`,
+      tag: kind === 'unassigned' ? 'unassigned' : isNew(a.id) ? 'new' : a.updatedAt ? 'modified' : undefined,
+      csp: a.cloud?.csp,
+      ownerName: biz?.empName,
+      ownerTeam: biz ? teamOf(biz.deptPath) : undefined,
+    };
+  });
 }
 
 // ── §7.6 방치 자산 ──
@@ -265,50 +258,166 @@ export async function getAnomalySummary(): Promise<AnomalySummaryItem[]> {
   ];
 }
 
-export type AnomalyDetail = { columns: string[]; rows: string[][] };
+export type IncUser = { name: string; team: string };
+export type IncidentRow = {
+  id: string;
+  ip?: string;
+  host?: string;
+  when?: string;
+  users?: IncUser[]; // dup-edit [A,B]
+  who?: IncUser; // overwrite / owner-change 행위자
+  prev?: IncUser; // overwrite 이전 사용자
+  target?: IncUser; // owner-change 대상자
+  action?: string;
+  role?: string;
+  added?: IncUser; // dup-ip-update
+  duplicates?: { ip: string; host: string; owner: string }[]; // dup-ip-new
+  rank?: number; // search-top
+  label?: string;
+  attempts?: number;
+  searchers?: number;
+};
+export type AnomalyDetail = {
+  key: AnomalyKey;
+  desc: string;
+  stats: { label: string; value: string }[];
+  rows: IncidentRow[];
+  csvHeaders: string[];
+  csvRows: string[][];
+};
+
+function timeStats(times: string[]) {
+  const sorted = [...times].filter(Boolean).sort();
+  const first = sorted[0] ? formatDateTime(sorted[0]) : '-';
+  const lastDay = sorted.at(-1)?.slice(0, 10);
+  const recent = times.filter((t) => t.slice(0, 10) === lastDay).length;
+  return { first, recent };
+}
+
+function eventStats(count: number, times: string[]): { label: string; value: string }[] {
+  const { first, recent } = timeStats(times);
+  return [
+    { label: '발생 건수', value: `${count}건` },
+    { label: '최근 24h', value: `+${recent}건` },
+    { label: '최초 발생', value: first },
+  ];
+}
+
+const ipOf = (assetId: string) => mockDb.assets.find((a) => a.id === assetId)?.ips.join(', ') ?? '-';
 
 export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> {
   await delay(150);
+
   switch (key) {
-    case 'dup-edit':
+    case 'dup-edit': {
+      const rows: IncidentRow[] = [
+        ...dupEditSeed.map((e) => ({
+          id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
+          users: [{ name: e.userA, team: e.teamA }, { name: e.userB, team: e.teamB }],
+        })),
+        ...mockDb.conflictEvents.map((e) => ({
+          id: e.id, ip: ipOf(e.assetId), host: e.hostname, when: formatDateTime(e.occurredAt),
+          users: [{ name: e.userA, team: teamOfName(e.userA) }, { name: e.userB, team: teamOfName(e.userB) }],
+        })),
+      ];
+      const times = [...dupEditSeed, ...mockDb.conflictEvents].map((e) => e.occurredAt);
       return {
-        columns: ['자산', '충돌 사용자 A', '충돌 사용자 B', '마지막 충돌'],
-        rows: [
-          ...dupEditSeed.map((e) => [e.hostname, e.userA, e.userB, formatDateTime(e.occurredAt)]),
-          ...mockDb.conflictEvents.map((e) => [e.hostname, e.userA, e.userB, formatDateTime(e.occurredAt)]),
-        ],
+        key, desc: '동일 자산을 2명 이상이 수정한 케이스. 마지막 저장이 반영되며 이전 입력은 변경 이력에 보존됩니다.',
+        stats: eventStats(rows.length, times), rows,
+        csvHeaders: ['IP', '자산명', '충돌 사용자 A', '충돌 사용자 B', '마지막 충돌'],
+        csvRows: rows.map((r) => [r.ip!, r.host!, r.users![0]!.name, r.users![1]!.name, r.when!]),
       };
-    case 'overwrite':
+    }
+    case 'overwrite': {
+      const rows: IncidentRow[] = [
+        ...overwriteSeed.map((e) => ({
+          id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
+          who: { name: e.overwroteBy, team: e.overwroteTeam }, prev: { name: e.previousBy, team: e.previousTeam },
+        })),
+        ...mockDb.overwriteEvents.map((e) => ({
+          id: e.id, ip: ipOf(e.assetId), host: e.hostname, when: formatDateTime(e.occurredAt),
+          who: { name: e.overwroteBy, team: teamOfName(e.overwroteBy) },
+          prev: { name: e.previousBy, team: teamOfName(e.previousBy) },
+        })),
+      ];
+      const times = [...overwriteSeed, ...mockDb.overwriteEvents].map((e) => e.occurredAt);
       return {
-        columns: ['자산', '덮어쓴 사용자', '이전 사용자', '시점'],
-        rows: [
-          ...overwriteSeed.map((e) => [e.hostname, e.overwroteBy, e.previousBy, formatDateTime(e.occurredAt)]),
-          ...mockDb.overwriteEvents.map((e) => [e.hostname, e.overwroteBy, e.previousBy, formatDateTime(e.occurredAt)]),
-        ],
+        key, desc: '동시 수정 알림 후 "내 변경으로 덮어쓰기"를 선택한 케이스. 이전 사용자의 입력은 변경 이력에서 확인 가능합니다.',
+        stats: eventStats(rows.length, times), rows,
+        csvHeaders: ['IP', '자산명', '덮어쓴 사용자', '이전 사용자', '시점'],
+        csvRows: rows.map((r) => [r.ip!, r.host!, r.who!.name, r.prev!.name, r.when!]),
       };
-    case 'owner-change':
+    }
+    case 'owner-change': {
+      const rows: IncidentRow[] = [
+        ...ownerChangeSeed.map((e) => ({
+          id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
+          who: { name: e.actor, team: e.actorTeam }, action: e.action === 'add' ? '추가' : '삭제',
+          target: { name: e.target, team: e.targetTeam }, role: e.role,
+        })),
+        ...mockDb.ownerChanges.map((e) => ({
+          id: e.historyId, ip: ipOf(e.assetId), host: e.hostname, when: formatDateTime(e.occurredAt),
+          who: { name: e.actorName, team: teamOfName(e.actorName) }, action: e.action === 'add' ? '추가' : '삭제',
+          target: { name: e.targetName, team: teamOfName(e.targetName) }, role: ROLE_LABELS[e.role],
+        })),
+      ];
+      const times = [...ownerChangeSeed, ...mockDb.ownerChanges].map((e) => e.occurredAt);
       return {
-        columns: ['자산', '행위자', '추가/삭제', '대상자', '역할', '시점'],
-        rows: [
-          ...ownerChangeSeed.map((e) => [e.hostname, e.actor, e.action === 'add' ? '추가' : '삭제', e.target, e.role, formatDateTime(e.occurredAt)]),
-          ...mockDb.ownerChanges.map((e) => [
-            e.hostname, e.actorName, e.action === 'add' ? '추가' : '삭제', e.targetName, ROLE_LABELS[e.role], formatDateTime(e.occurredAt),
-          ]),
-        ],
+        key, desc: '담당자 추가/삭제 이력. 자기 자신 대량 추가나 타인 무단 삭제 패턴을 추적합니다.',
+        stats: eventStats(rows.length, times), rows,
+        csvHeaders: ['IP', '자산명', '행위자', '추가/삭제', '대상자', '역할', '시점'],
+        csvRows: rows.map((r) => [r.ip!, r.host!, r.who!.name, r.action!, r.target!.name, r.role!, r.when!]),
       };
-    case 'dup-ip-update':
+    }
+    case 'dup-ip-new': {
+      const rows: IncidentRow[] = mockDb.dupIpNewEvents.map((e) => ({
+        id: e.id, ip: e.ip, host: e.hostname, when: formatDateTime(e.occurredAt),
+        duplicates: e.duplicateAssetIds.map((aid) => {
+          const a = mockDb.assets.find((x) => x.id === aid);
+          return { ip: a?.ips.join(', ') ?? e.ip, host: a?.hostname ?? aid, owner: a?.owners.map((o) => o.empName).join(', ') || '-' };
+        }),
+      }));
+      const times = mockDb.dupIpNewEvents.map((e) => e.occurredAt);
       return {
-        columns: ['갱신 자산', '현업 추가된 사용자', '시점'],
-        rows: mockDb.dupIpUpdateEvents.map((e) => [e.hostname, e.addedUser, formatDateTime(e.occurredAt)]),
+        key, desc: '동일 IP 자산이 2건 이상 존재하는 상태에서 신규 등록된 자산. 동일 IP 자산 목록을 함께 확인하세요.',
+        stats: eventStats(rows.length, times), rows,
+        csvHeaders: ['신규 IP', '신규 자산명', '동일 IP 자산', '시점'],
+        csvRows: rows.map((r) => [r.ip!, r.host!, r.duplicates!.map((d) => d.host).join(' / '), r.when!]),
       };
+    }
+    case 'dup-ip-update': {
+      const rows: IncidentRow[] = mockDb.dupIpUpdateEvents.map((e) => ({
+        id: e.id, ip: ipOf(e.assetId), host: e.hostname, when: formatDateTime(e.occurredAt),
+        added: { name: e.addedUser, team: teamOfName(e.addedUser) },
+      }));
+      const times = mockDb.dupIpUpdateEvents.map((e) => e.occurredAt);
+      return {
+        key, desc: '단일 IP 중복 발견 시 기존 자산의 현업 담당자로 본인이 추가된 케이스.',
+        stats: eventStats(rows.length, times), rows,
+        csvHeaders: ['IP', '갱신 자산명', '추가된 현업 담당자', '시점'],
+        csvRows: rows.map((r) => [r.ip!, r.host!, r.added!.name, r.when!]),
+      };
+    }
     case 'search-top-ip':
-      return { columns: ['IP', '검색 시도', '검색자 수'], rows: searchTopIp.map((r) => [r.key, String(r.attempts), String(r.searchers)]) };
     case 'search-top-host':
-      return { columns: ['Hostname', '검색 시도', '검색자 수'], rows: searchTopHost.map((r) => [r.key, String(r.attempts), String(r.searchers)]) };
-    case 'search-top-person':
-      return { columns: ['담당자', '검색 시도', '검색자 수'], rows: searchTopPerson.map((r) => [r.key, String(r.attempts), String(r.searchers)]) };
+    case 'search-top-person': {
+      const src = key === 'search-top-ip' ? searchTopIp : key === 'search-top-host' ? searchTopHost : searchTopPerson;
+      const targetLabel = key === 'search-top-ip' ? 'IP' : key === 'search-top-host' ? 'Hostname' : '담당자';
+      const rows: IncidentRow[] = src.map((r, i) => ({ id: `${key}-${i}`, rank: i + 1, label: r.key, attempts: r.attempts, searchers: r.searchers }));
+      return {
+        key, desc: `검색 시도가 많은 ${targetLabel} 상위 100. 많은 사람이 찾는 자산일수록 등록 우선순위가 높습니다.`,
+        stats: [
+          { label: '대상 수', value: `${rows.length}개` },
+          { label: '최다 시도', value: `${Math.max(...src.map((r) => r.attempts), 0)}회` },
+          { label: '누적 시도', value: `${src.reduce((s, r) => s + r.attempts, 0)}회` },
+        ],
+        rows,
+        csvHeaders: ['순위', targetLabel, '검색 시도', '검색자 수'],
+        csvRows: rows.map((r) => [String(r.rank), r.label!, String(r.attempts), String(r.searchers)]),
+      };
+    }
     default:
-      return { columns: [], rows: [] };
+      return { key, desc: '', stats: [], rows: [], csvHeaders: [], csvRows: [] };
   }
 }
 

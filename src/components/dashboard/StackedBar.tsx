@@ -1,21 +1,27 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Panel } from '@/components/layout/Panel';
+import { WeekNav } from './WeekNav';
 import { getDailyEditNew } from '@/lib/api/dashboard';
-import { TODAY_DPLUS } from '@/lib/mockDashboard';
+import { formatShortDate } from '@/lib/format';
 
 const HATCH_BG =
   'repeating-linear-gradient(135deg, rgba(255,255,255,.18) 0px, rgba(255,255,255,.18) 2px, transparent 2px, transparent 6px)';
 
-/** v1 이식 — 일자별 신규 vs 수정 비율 (대시보드 최하단). */
+/** v1 이식 — 일자별 신규 vs 수정 비율 (최하단). 주 단위 < > 이동. */
 export function StackedBar() {
   const { data } = useQuery({ queryKey: ['dashboard', 'daily'], queryFn: getDailyEditNew });
-  const rows = data ?? [];
-  const maxTotal = Math.max(...rows.map((d) => d.edit + d.neo), 1);
+  const [week, setWeek] = useState(0);
+
+  const all = data ?? [];
+  const rows = all.filter((d) => d.dPlus >= week * 7 && d.dPlus < week * 7 + 7);
+  const maxTotal = Math.max(...all.map((d) => d.edit + d.neo), 1);
 
   return (
     <Panel
       title="일자별 신규 vs 수정 비율"
-      subtitle={`D+0 ~ D+${TODAY_DPLUS} · 일별 합계 기준`}
+      subtitle="일별 합계 기준 · 주 단위 보기"
+      headerRight={<WeekNav week={week} total={4} onChange={setWeek} />}
       padded={false}
     >
       <div className="px-5 py-4">
@@ -29,20 +35,18 @@ export function StackedBar() {
               <div
                 key={d.dPlus}
                 className="grid items-center gap-3 text-[11.5px]"
-                style={{ gridTemplateColumns: '42px 1fr 100px' }}
+                style={{ gridTemplateColumns: '92px 1fr 100px' }}
               >
-                <span className="font-mono text-text-3">D+{d.dPlus}</span>
+                <span className="font-mono text-text-3">
+                  D+{d.dPlus} · {formatShortDate(d.date)}
+                </span>
                 <div className="flex h-[18px] overflow-hidden rounded bg-bg-soft">
                   <div
                     className="h-full bg-[#57534e]"
                     style={{ width: `${editFrac}%`, backgroundImage: HATCH_BG }}
                     title={`수정 ${d.edit}건`}
                   />
-                  <div
-                    className="h-full bg-purple"
-                    style={{ width: `${newFrac}%` }}
-                    title={`신규 ${d.neo}건`}
-                  />
+                  <div className="h-full bg-purple" style={{ width: `${newFrac}%` }} title={`신규 ${d.neo}건`} />
                 </div>
                 <div className="flex justify-end gap-2 font-mono text-[11px]">
                   <span className="text-text">{d.edit.toLocaleString()}</span>

@@ -88,18 +88,27 @@ function buildProgress(): ProgressPoint[] {
 
 export const progressTrend: ProgressPoint[] = buildProgress();
 
-// ── 일자별 신규 vs 수정 비율 (v1 유지) — 경과일(D+0 ~ D+오늘)만 데이터 존재 ──
-export type DailyEditNew = { dPlus: number; edit: number; neo: number };
-export const dailyEditNew: DailyEditNew[] = [
-  { dPlus: 0, edit: 142, neo: 18 },
-  { dPlus: 1, edit: 268, neo: 32 },
-  { dPlus: 2, edit: 312, neo: 41 },
-  { dPlus: 3, edit: 384, neo: 52 },
-  { dPlus: 4, edit: 426, neo: 48 },
-  { dPlus: 5, edit: 388, neo: 38 },
-  { dPlus: 6, edit: 402, neo: 37 },
-  { dPlus: 7, edit: 382, neo: 36 },
-];
+// ── 일자별 신규 vs 수정 비율 (v1 유지) — 캠페인 전 기간(주 단위 < > 이동) ──
+export type DailyEditNew = { dPlus: number; date: string; edit: number; neo: number };
+function buildDaily(): DailyEditNew[] {
+  const start = new Date(CAMPAIGN.startDate + 'T00:00:00+09:00');
+  const end = new Date(CAMPAIGN.endDate + 'T00:00:00+09:00');
+  const total = Math.round((end.getTime() - start.getTime()) / 86400000);
+  const out: DailyEditNew[] = [];
+  for (let d = 0; d <= total; d++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + d);
+    const weekday = date.getDay();
+    const base = weekday === 0 || weekday === 6 ? 60 : 320;
+    const seed = (d * 9301 + 49297) % 233280;
+    const jitter = (seed / 233280 - 0.5) * 120;
+    const edit = Math.max(20, Math.round(base + jitter));
+    const neo = Math.max(2, Math.round(edit * (0.08 + (seed % 7) / 100)));
+    out.push({ dPlus: d, date: date.toISOString(), edit, neo });
+  }
+  return out;
+}
+export const dailyEditNew: DailyEditNew[] = buildDaily();
 
 // ── 시간대별 접속 추이 히트맵 (요일 7 × 시간 24), 주별 ──
 export const HEATMAP_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
@@ -146,11 +155,11 @@ export const ASSET_TYPE_BASELINE = {
 };
 
 // 담당자 전원 퇴사 (인사 별도 쿼리 결과 — 화면만 준비)
-export type RetiredAssetRow = { id: string; hostname: string; lastOwner: string; retiredAt: string };
+export type RetiredAssetRow = { id: string; ip: string; hostname: string; lastOwner: string; retiredAt: string };
 export const retiredAssets: RetiredAssetRow[] = [
-  { id: 'R-1', hostname: 'legacy-erp-01', lastOwner: '강퇴직(2026-03)', retiredAt: '2026-03-31' },
-  { id: 'R-2', hostname: 'old-mail-relay', lastOwner: '윤퇴직(2026-04)', retiredAt: '2026-04-15' },
-  { id: 'R-3', hostname: 'archive-nas-02', lastOwner: '한퇴직(2026-02)', retiredAt: '2026-02-28' },
+  { id: 'R-1', ip: '10.10.1.21', hostname: 'legacy-erp-01', lastOwner: '강퇴직(2026-03)', retiredAt: '2026-03-31' },
+  { id: 'R-2', ip: '10.10.1.34', hostname: 'old-mail-relay', lastOwner: '윤퇴직(2026-04)', retiredAt: '2026-04-15' },
+  { id: 'R-3', ip: '10.10.1.88', hostname: 'archive-nas-02', lastOwner: '한퇴직(2026-02)', retiredAt: '2026-02-28' },
 ];
 
 // ── §7.6 방치 자산 ──
@@ -195,20 +204,28 @@ export const searchTopPerson: SearchTopRow[] = [
   { key: '이몽룡', attempts: 25, searchers: 6 },
   { key: '정약용', attempts: 17, searchers: 3 },
 ];
-export type DupEditSeed = { id: string; hostname: string; userA: string; userB: string; occurredAt: string };
+export type DupEditSeed = {
+  id: string; ip: string; hostname: string;
+  userA: string; teamA: string; userB: string; teamB: string; occurredAt: string;
+};
 export const dupEditSeed: DupEditSeed[] = [
-  { id: 'de1', hostname: 'ha-ctrl-01', userA: '박문수', userB: '김현수', occurredAt: '2026-06-16T10:00:00+09:00' },
+  { id: 'de1', ip: '1.1.1.1', hostname: 'ha-ctrl-01', userA: '박문수', teamA: '제어연구팀', userB: '김현수', teamB: '제어연구팀', occurredAt: '2026-06-23T10:00:00+09:00' },
+  { id: 'de2', ip: '10.70.1.10', hostname: 'es-sys-dev-01', userA: '윤서연', teamA: '시스템개발팀', userB: '이몽룡', teamB: '인프라운영팀', occurredAt: '2026-06-24T13:11:00+09:00' },
 ];
-export type OverwriteSeed = { id: string; hostname: string; overwroteBy: string; previousBy: string; occurredAt: string };
+export type OverwriteSeed = {
+  id: string; ip: string; hostname: string;
+  overwroteBy: string; overwroteTeam: string; previousBy: string; previousTeam: string; occurredAt: string;
+};
 export const overwriteSeed: OverwriteSeed[] = [
-  { id: 'ov1', hostname: 'sec-siem-01', overwroteBy: '정우성', previousBy: '정약용', occurredAt: '2026-06-16T15:30:00+09:00' },
+  { id: 'ov1', ip: '10.80.0.5', hostname: 'sec-siem-01', overwroteBy: '정우성', overwroteTeam: '보안운영팀', previousBy: '정약용', previousTeam: '보안운영팀', occurredAt: '2026-06-24T15:30:00+09:00' },
 ];
 export type OwnerChangeSeed = {
-  id: string; hostname: string; actor: string; action: 'add' | 'remove'; target: string; role: string; occurredAt: string;
+  id: string; ip: string; hostname: string;
+  actor: string; actorTeam: string; action: 'add' | 'remove'; target: string; targetTeam: string; role: string; occurredAt: string;
 };
 export const ownerChangeSeed: OwnerChangeSeed[] = [
-  { id: 'oc1', hostname: 'vs-platform-a', actor: '이서진', action: 'add', target: '이서진', role: '현업', occurredAt: '2026-06-17T09:00:00+09:00' },
-  { id: 'oc2', hostname: 'es-sys-dev-01', actor: '윤아름', action: 'remove', target: '김춘향', role: 'SM', occurredAt: '2026-06-17T16:40:00+09:00' },
+  { id: 'oc1', ip: '2.2.2.2', hostname: 'vs-platform-a', actor: '이서진', actorTeam: '플랫폼개발팀', action: 'add', target: '이서진', targetTeam: '플랫폼개발팀', role: '현업', occurredAt: '2026-06-25T09:00:00+09:00' },
+  { id: 'oc2', ip: '10.70.1.10', hostname: 'es-sys-dev-01', actor: '윤아름', actorTeam: 'SM팀', action: 'remove', target: '김춘향', targetTeam: 'SM팀', role: 'SM', occurredAt: '2026-06-25T16:40:00+09:00' },
 ];
 
 export type ZeroSearchRow = { id: string; query: string; searcher: string; at: string; proceeded: boolean };

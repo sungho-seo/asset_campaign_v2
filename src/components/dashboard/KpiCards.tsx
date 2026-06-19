@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Users, UserCheck, FileText } from 'lucide-react';
 import { KPICard } from '@/components/kpi/KPICard';
-import { SideDrawer } from '@/components/drawer/SideDrawer';
+import { ListSidePanel } from '@/components/drawer/ListSidePanel';
 import { getKpi, getAccessLog, getUpdatedAssets } from '@/lib/api/dashboard';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -81,81 +81,96 @@ export function KpiCards() {
 }
 
 function AccessPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { data } = useQuery({
-    queryKey: ['dashboard', 'access'],
-    queryFn: getAccessLog,
-    enabled: open,
-  });
+  const { data } = useQuery({ queryKey: ['dashboard', 'access'], queryFn: getAccessLog, enabled: open });
+  const rows = data ?? [];
+  const team = (p: string) => p.split('>').pop()?.trim() ?? p;
+  const match = (e: (typeof rows)[number], f: string) =>
+    !f || `${e.empName} ${e.deptPath} ${e.action}`.toLowerCase().includes(f.toLowerCase());
+
   return (
-    <SideDrawer open={open} onClose={onClose} eyebrow="KPI · 접속자" title="당일 접속자 목록">
-      <div className="space-y-1.5">
-        {data?.map((e) => (
-          <div
-            key={e.id}
-            className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-[12.5px]"
-          >
-            <div className="min-w-0">
-              <div className="font-medium text-text">{e.empName}</div>
-              <div className="truncate text-[11.5px] text-text-3">{e.deptPath}</div>
-            </div>
-            <div className="ml-2 shrink-0 text-right">
-              <span
-                className={cn(
-                  'rounded px-1.5 py-0.5 font-mono text-[10.5px] font-medium',
-                  e.action === '담당자삭제'
-                    ? 'bg-danger-soft text-danger'
-                    : e.action === '단순접속'
-                      ? 'bg-bg-soft text-text-3'
-                      : 'bg-success-soft text-success',
-                )}
-              >
-                {e.action}
-              </span>
-              <div className="mt-0.5 font-mono text-[11px] text-text-4">
-                {formatDateTime(e.at).slice(-5)}
+    <ListSidePanel
+      open={open}
+      onClose={onClose}
+      eyebrow="KPI · 접속자"
+      title="당일 접속자 목록"
+      desc="타임스탬프 · 이름·소속 · 액션 종류"
+      stats={[{ label: '접속자', value: `${rows.length}명` }]}
+      searchPlaceholder="이름 / 소속 / 액션 필터"
+      padded
+      csv={{
+        filename: 'visitors.csv',
+        headers: ['시각', '이름', '소속', '액션'],
+        rows: rows.map((e) => [formatDateTime(e.at), e.empName, e.deptPath, e.action]),
+      }}
+    >
+      {(filter) => (
+        <div className="space-y-1.5">
+          {rows.filter((e) => match(e, filter)).map((e) => (
+            <div key={e.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-[12.5px]">
+              <div className="min-w-0">
+                <div className="font-medium text-text">{e.empName}</div>
+                <div className="truncate text-[10.5px] text-text-4">{team(e.deptPath)}</div>
+              </div>
+              <div className="ml-2 shrink-0 text-right">
+                <span className={cn('rounded px-1.5 py-0.5 font-mono text-[10.5px] font-medium',
+                  e.action === '담당자삭제' ? 'bg-danger-soft text-danger' : e.action === '단순접속' ? 'bg-bg-soft text-text-3' : 'bg-success-soft text-success')}>
+                  {e.action}
+                </span>
+                <div className="mt-0.5 font-mono text-[11px] text-text-4">{formatDateTime(e.at).slice(-5)}</div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </SideDrawer>
+          ))}
+        </div>
+      )}
+    </ListSidePanel>
   );
 }
 
 function UpdatePanel({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { data } = useQuery({
-    queryKey: ['dashboard', 'updated'],
-    queryFn: getUpdatedAssets,
-    enabled: open,
-  });
+  const { data } = useQuery({ queryKey: ['dashboard', 'updated'], queryFn: getUpdatedAssets, enabled: open });
+  const rows = data ?? [];
+  const counts = { mod: rows.filter((r) => r.kind === 'modified').length, neo: rows.filter((r) => r.kind === 'new').length };
+  const match = (e: (typeof rows)[number], f: string) =>
+    !f || `${e.hostname} ${e.by} ${e.csp ?? ''}`.toLowerCase().includes(f.toLowerCase());
+
   return (
-    <SideDrawer open={open} onClose={onClose} eyebrow="KPI · 업데이트" title="업데이트 자산 목록">
-      <div className="space-y-1.5">
-        {data?.map((e) => (
-          <div
-            key={e.id}
-            className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-[12.5px]"
-          >
-            <div className="min-w-0">
-              <div className="font-medium text-text">
-                {e.hostname}
-                {e.csp && <span className="ml-1.5 font-mono text-[11px] text-text-4">{e.csp}</span>}
+    <ListSidePanel
+      open={open}
+      onClose={onClose}
+      eyebrow="KPI · 업데이트"
+      title="업데이트 자산 목록"
+      desc="수정 / 신규 구분"
+      stats={[
+        { label: '수정', value: `${counts.mod}건` },
+        { label: '신규', value: `${counts.neo}건` },
+      ]}
+      searchPlaceholder="자산명 / 수정자 필터"
+      padded
+      csv={{
+        filename: 'updated-assets.csv',
+        headers: ['자산명', '구분', '수정자', '시각', 'CSP'],
+        rows: rows.map((e) => [e.hostname, e.kind === 'new' ? '신규' : '수정', e.by, formatDateTime(e.at), e.csp ?? '']),
+      }}
+    >
+      {(filter) => (
+        <div className="space-y-1.5">
+          {rows.filter((e) => match(e, filter)).map((e) => (
+            <div key={e.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-[12.5px]">
+              <div className="min-w-0">
+                <div className="font-medium text-text">
+                  {e.hostname}
+                  {e.csp && <span className="ml-1.5 font-mono text-[11px] text-text-4">{e.csp}</span>}
+                </div>
+                <div className="font-mono text-[11px] text-text-3">{e.by} · {formatDateTime(e.at)}</div>
               </div>
-              <div className="font-mono text-[11px] text-text-3">
-                {e.by} · {formatDateTime(e.at)}
-              </div>
+              <span className={cn('rounded px-1.5 py-0.5 font-mono text-[10.5px] font-medium',
+                e.kind === 'new' ? 'bg-purple-soft text-purple' : 'bg-success-soft text-success')}>
+                {e.kind === 'new' ? '신규' : '수정'}
+              </span>
             </div>
-            <span
-              className={cn(
-                'rounded px-1.5 py-0.5 font-mono text-[10.5px] font-medium',
-                e.kind === 'new' ? 'bg-purple-soft text-purple' : 'bg-success-soft text-success',
-              )}
-            >
-              {e.kind === 'new' ? '신규' : '수정'}
-            </span>
-          </div>
-        ))}
-      </div>
-    </SideDrawer>
+          ))}
+        </div>
+      )}
+    </ListSidePanel>
   );
 }

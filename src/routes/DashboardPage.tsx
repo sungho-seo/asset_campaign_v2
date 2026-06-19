@@ -1,4 +1,5 @@
-import { ShieldCheck } from 'lucide-react';
+import { Shell } from '@/components/layout/Shell';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { KpiCards } from '@/components/dashboard/KpiCards';
 import { ProgressChart } from '@/components/dashboard/ProgressChart';
 import { HourlyHeatmap } from '@/components/dashboard/HourlyHeatmap';
@@ -6,34 +7,41 @@ import { AssetInfoSection } from '@/components/dashboard/AssetInfoSection';
 import { AbandonedCard } from '@/components/dashboard/AbandonedCard';
 import { AnomalySection } from '@/components/dashboard/AnomalySection';
 import { OrgSection } from '@/components/dashboard/OrgSection';
+import { CAMPAIGN } from '@/lib/mockDashboard';
 
-/** 대시보드 (PRD §7) — 정보보호담당 구성원 전용. LG레드 강조 모듈. */
+/** 대시보드 (PRD §7) — 정보보호담당 구성원 전용. v1 룩앤필 + v8 기능. */
 export default function DashboardPage() {
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
-      <div className="flex items-center gap-2 border-l-4 border-lgred pl-3">
-        <ShieldCheck size={20} className="text-lgred" />
-        <div>
-          <h1 className="text-lg font-bold text-neutral-900">캠페인 모니터링 대시보드</h1>
-          <p className="text-xs text-neutral-500">정보보호담당 구성원 전용 · 5분 이내 준실시간 갱신</p>
-        </div>
+    <Shell>
+      <PageHeader
+        eyebrow="DASHBOARD"
+        title="IT 자산 등록 캠페인 현황"
+        subtitle={`전체 자산 ${CAMPAIGN.totalAssets.toLocaleString()}건 기준 · 캠페인 ${CAMPAIGN.startDate} ~ ${CAMPAIGN.endDate} · 5분 주기 갱신`}
+      />
+
+      <div className="mb-5">
+        <KpiCards />
       </div>
 
-      <KpiCards />
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <div className="mb-5 grid gap-4" style={{ gridTemplateColumns: '1.4fr 1fr' }}>
         <ProgressChart />
         <HourlyHeatmap />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_280px]">
+      <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <AssetInfoSection />
+        <AnomalySection />
+      </div>
+
+      <div className="mb-5">
         <AbandonedCard />
       </div>
 
       <OrgSection />
 
-      <AnomalySection />
-    </div>
+      <p className="mt-6 text-center font-mono text-[11.5px] text-text-4">
+        데이터 갱신 주기 5분 · 분모는 Qualys 식별 전체 자산 수 {CAMPAIGN.totalAssets.toLocaleString()}건 기준
+      </p>
+    </Shell>
   );
 }

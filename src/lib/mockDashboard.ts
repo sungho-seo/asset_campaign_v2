@@ -9,6 +9,9 @@ export const CAMPAIGN = {
   weeks: 4,
 };
 
+/** 진척률 추이 '오늘' 마커 (D+N). */
+export const TODAY_DPLUS = 7;
+
 // 베이스라인(샘플 외 자산/임직원 집계분)
 export const BASELINE = {
   identifiedAssets: 3001, // 식별 완료

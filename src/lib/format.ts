@@ -20,6 +20,13 @@ export function formatShortDate(iso: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
+/** v1 호환 별칭 */
+export const formatDateMD = formatShortDate;
+
+export function formatPct(n: number, digits = 1): string {
+  return `${n.toFixed(digits)}%`;
+}
+
 export function relativeFromNow(iso: string | null | undefined): string {
   if (!iso) return '-';
   const diffMs = Date.now() - new Date(iso).getTime();

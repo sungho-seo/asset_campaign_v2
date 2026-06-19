@@ -18,6 +18,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@tanstack/react-query": "^5.51.0",
+    "clsx": "^2.1.1",
     "express": "^4.19.2",
     "i18next": "^23.12.0",
     "i18next-browser-languagedetector": "^8.0.0",
@@ -28,6 +29,7 @@
     "react-i18next": "^15.0.0",
     "react-router-dom": "^6.25.0",
     "recharts": "^2.12.7",
+    "tailwind-merge": "^2.6.1",
     "zod": "^3.23.8",
     "zustand": "^4.5.4"
   },

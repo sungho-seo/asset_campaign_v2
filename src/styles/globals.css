@@ -1,22 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light;
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html,
+  #root {
+    height: 100%;
+  }
+  html {
+    @apply bg-bg text-text font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    /* 상단 중앙에 brand-soft(#FCE4EC) 핑크 글로우 — 넓고 자연스럽게 페이드 (v1) */
+    background-image: radial-gradient(
+      ellipse 2200px 1400px at 50% -50px,
+      rgba(252, 228, 236, 0.92) 0%,
+      rgba(252, 228, 236, 0.55) 28%,
+      rgba(252, 228, 236, 0.22) 60%,
+      rgba(252, 228, 236, 0.08) 80%,
+      transparent 100%
+    );
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 }
 
-html,
-body,
-#root {
-  height: 100%;
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-line-2 rounded;
+  }
 }
 
-body {
-  @apply bg-neutral-50 text-neutral-900 antialiased;
-}
-
-/* 검증 배너 → 필드 펄스 (Phase 5에서 사용) */
+/* 검증 배너 → 필드 펄스 (임직원 자산 편집) */
 @keyframes field-pulse {
   0% {
     box-shadow: 0 0 0 0 rgba(165, 0, 52, 0.5);

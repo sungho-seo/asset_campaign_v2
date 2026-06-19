@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Panel } from '@/components/layout/Panel';
 import { WeekNav } from './WeekNav';
 import { getHourlyHeatmap } from '@/lib/api/dashboard';
+import { CAMPAIGN } from '@/lib/mockDashboard';
 import { cn } from '@/lib/cn';
 
 // v1 인디고 5단계 그라데이션 (룩앤필 그대로)
@@ -15,16 +16,7 @@ const levelClass: Record<number, string> = {
   5: 'bg-[#1e1b4b]',
 };
 
-// v2 데이터는 일~토(0~6). v1 룩(월 시작) 순서로 표시.
-const DISPLAY = [
-  { idx: 1, label: '월' },
-  { idx: 2, label: '화' },
-  { idx: 3, label: '수' },
-  { idx: 4, label: '목' },
-  { idx: 5, label: '금' },
-  { idx: 6, label: '토' },
-  { idx: 0, label: '일' },
-];
+const WEEKDAY = ['일', '월', '화', '수', '목', '금', '토'];
 
 function toLevel(count: number, max: number): number {
   if (count <= 0 || max <= 0) return 0;
@@ -38,18 +30,29 @@ export function HourlyHeatmap() {
   const grid = data?.[week] ?? [];
   const max = Math.max(1, ...grid.flat());
 
+  // 선택 주의 7일(연속 날짜). 데이터는 요일(0=일~6=토)로 버킷팅 → getDay()로 인덱싱.
+  const weekStart = new Date(CAMPAIGN.startDate + 'T00:00:00+09:00');
+  weekStart.setDate(weekStart.getDate() + week * 7);
+  const rows = Array.from({ length: 7 }, (_, i) => {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + i);
+    const wd = date.getDay();
+    return { date, wd, label: `${date.getMonth() + 1}/${date.getDate()} ${WEEKDAY[wd]}` };
+  });
+
   return (
     <Panel
       title="시간대별 접속 추이"
-      subtitle="요일 × 시간"
       headerRight={<WeekNav week={week} total={4} onChange={setWeek} />}
       padded={false}
+      className="flex h-full flex-col"
+      bodyClassName="flex flex-1 items-center justify-center"
     >
-      <div className="px-5 py-4">
+      <div className="w-full px-5 py-4">
         <div
           className="grid gap-[2px]"
           style={{
-            gridTemplateColumns: '36px repeat(24, 1fr)',
+            gridTemplateColumns: '56px repeat(24, 1fr)',
             gridTemplateRows: '18px repeat(7, 1fr)',
           }}
         >
@@ -59,17 +62,17 @@ export function HourlyHeatmap() {
               {h % 3 === 0 ? h : ''}
             </div>
           ))}
-          {DISPLAY.map(({ idx, label }) => (
-            <div key={`row-${idx}`} className="contents">
+          {rows.map(({ wd, label }, ri) => (
+            <div key={`row-${ri}`} className="contents">
               <div className="flex items-center justify-end pr-1.5 font-mono text-[9.5px] text-text-3">
                 {label}
               </div>
               {Array.from({ length: 24 }, (_, h) => {
-                const count = grid[idx]?.[h] ?? 0;
+                const count = grid[wd]?.[h] ?? 0;
                 const lvl = toLevel(count, max);
                 return (
                   <div
-                    key={`c-${idx}-${h}`}
+                    key={`c-${ri}-${h}`}
                     title={`${label} ${h}시 · ${count}명`}
                     className={cn(
                       'aspect-square min-h-[14px] rounded-sm transition-transform',
@@ -82,8 +85,7 @@ export function HourlyHeatmap() {
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-text-3">
-          <span>요일 × 시간 (0–23)</span>
+        <div className="mt-3 flex items-center justify-end font-mono text-[11px] text-text-3">
           <span className="flex items-center gap-1">
             <span>낮음</span>
             {[0, 1, 2, 3, 4, 5].map((l) => (

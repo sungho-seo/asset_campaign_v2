@@ -1,13 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  AlertTriangle,
-  RotateCcw,
-  UserCog,
-  Copy,
-  RefreshCw,
-  Search,
-} from 'lucide-react';
+import { AlertTriangle, RotateCcw, UserCog, Copy, RefreshCw, Search } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Panel } from '@/components/layout/Panel';
 import { MetricRow } from '@/components/kpi/MetricRow';
@@ -31,13 +24,46 @@ const META: Record<AnomalyKey, { icon: LucideIcon; color: IconColor; desc: strin
   'zero-search': { icon: Search, color: 'gray', desc: '검색 0건 패턴' },
 };
 
+const ANOMALY_KEYS: AnomalyKey[] = [
+  'dup-edit',
+  'overwrite',
+  'owner-change',
+  'dup-ip-new',
+  'dup-ip-update',
+];
+const SEARCH_KEYS: AnomalyKey[] = [
+  'search-top-ip',
+  'search-top-host',
+  'search-top-person',
+  'zero-search',
+];
+
+/** 이상 징후 / 충돌 (충돌·담당자·IP중복 계열) */
 export function AnomalySection() {
+  return <IncidentPanel title="이상 징후 / 충돌" subtitle="캠페인 누적 · 클릭하여 상세 보기" keys={ANOMALY_KEYS} />;
+}
+
+/** 검색 분석 (검색률 Top 10 · 검색 0건) — 충돌이 아닌 분석 성격으로 분리 */
+export function SearchAnalysisSection() {
+  return <IncidentPanel title="검색 분석" subtitle="검색 시도 패턴 · 클릭하여 상세 보기" keys={SEARCH_KEYS} />;
+}
+
+function IncidentPanel({
+  title,
+  subtitle,
+  keys,
+}: {
+  title: string;
+  subtitle: string;
+  keys: AnomalyKey[];
+}) {
   const { data } = useQuery({ queryKey: ['dashboard', 'anomalies'], queryFn: getAnomalySummary });
   const [active, setActive] = useState<AnomalySummaryItem | null>(null);
+  const items = (data ?? []).filter((i) => keys.includes(i.key));
 
   return (
-    <Panel title="이상 징후 / 충돌" subtitle="캠페인 누적 · 클릭하여 상세 보기" padded={false}>
-      {data?.map((item) => {
+    <Panel title={title} subtitle={subtitle} padded={false}>
+      {items.map((item) => {
         const m = META[item.key];
         return (
           <MetricRow
@@ -77,7 +103,7 @@ function AnomalyDrawer({ item, onClose }: { item: AnomalySummaryItem | null; onC
       }}
       width={720}
       padded={isDupIpNew}
-      eyebrow="이상 징후 상세"
+      eyebrow="상세"
       title={item?.label ?? ''}
       subtitle={item ? `발생 ${item.count.toLocaleString()}건` : undefined}
       toolbar={

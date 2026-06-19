@@ -6,6 +6,7 @@ import {
   accessLogToday,
   updatedAssetsToday,
   progressTrend,
+  dailyEditNew,
   heatmapByWeek,
   ASSET_TYPE_BASELINE,
   retiredAssets,
@@ -92,6 +93,11 @@ export async function getAccessLog(): Promise<AccessEntry[]> {
 export async function getProgressTrend(): Promise<ProgressPoint[]> {
   await delay(150);
   return progressTrend;
+}
+
+export async function getDailyEditNew() {
+  await delay(150);
+  return dailyEditNew;
 }
 
 export async function getHourlyHeatmap(): Promise<number[][][]> {

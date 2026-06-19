@@ -5,8 +5,9 @@ import { ProgressChart } from '@/components/dashboard/ProgressChart';
 import { HourlyHeatmap } from '@/components/dashboard/HourlyHeatmap';
 import { AssetInfoSection } from '@/components/dashboard/AssetInfoSection';
 import { AbandonedCard } from '@/components/dashboard/AbandonedCard';
-import { AnomalySection } from '@/components/dashboard/AnomalySection';
+import { AnomalySection, SearchAnalysisSection } from '@/components/dashboard/AnomalySection';
 import { OrgSection } from '@/components/dashboard/OrgSection';
+import { StackedBar } from '@/components/dashboard/StackedBar';
 import { CAMPAIGN } from '@/lib/mockDashboard';
 
 /** 대시보드 (PRD §7) — 정보보호담당 구성원 전용. v1 룩앤필 + v8 기능. */
@@ -33,11 +34,17 @@ export default function DashboardPage() {
         <AnomalySection />
       </div>
 
-      <div className="mb-5">
+      <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <SearchAnalysisSection />
         <AbandonedCard />
       </div>
 
-      <OrgSection />
+      <div className="mb-5">
+        <OrgSection />
+      </div>
+
+      {/* 최하단 — 일자별 신규 vs 수정 비율 (v1 유지) */}
+      <StackedBar />
 
       <p className="mt-6 text-center font-mono text-[11.5px] text-text-4">
         데이터 갱신 주기 5분 · 분모는 Qualys 식별 전체 자산 수 {CAMPAIGN.totalAssets.toLocaleString()}건 기준

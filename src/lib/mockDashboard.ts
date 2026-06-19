@@ -5,7 +5,7 @@ export const CAMPAIGN = {
   totalAssets: 12847,
   totalEmployees: 3200,
   startDate: '2026-06-22', // D+0
-  endDate: '2026-07-17', // 캠페인 종료 (약 4주)
+  endDate: '2026-07-20', // D+28 (정확히 4주, 주 간격 동일)
   weeks: 4,
 };
 
@@ -87,6 +87,19 @@ function buildProgress(): ProgressPoint[] {
 }
 
 export const progressTrend: ProgressPoint[] = buildProgress();
+
+// ── 일자별 신규 vs 수정 비율 (v1 유지) — 경과일(D+0 ~ D+오늘)만 데이터 존재 ──
+export type DailyEditNew = { dPlus: number; edit: number; neo: number };
+export const dailyEditNew: DailyEditNew[] = [
+  { dPlus: 0, edit: 142, neo: 18 },
+  { dPlus: 1, edit: 268, neo: 32 },
+  { dPlus: 2, edit: 312, neo: 41 },
+  { dPlus: 3, edit: 384, neo: 52 },
+  { dPlus: 4, edit: 426, neo: 48 },
+  { dPlus: 5, edit: 388, neo: 38 },
+  { dPlus: 6, edit: 402, neo: 37 },
+  { dPlus: 7, edit: 382, neo: 36 },
+];
 
 // ── 시간대별 접속 추이 히트맵 (요일 7 × 시간 24), 주별 ──
 export const HEATMAP_DAYS = ['일', '월', '화', '수', '목', '금', '토'];

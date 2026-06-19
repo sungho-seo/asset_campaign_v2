@@ -81,7 +81,6 @@ export function ProgressChart() {
   return (
     <Panel
       title="진척률 추이"
-      subtitle="캠페인 4주 전체 · 식별률 + 참여율"
       headerRight={
         <span className="flex items-center gap-3 font-mono text-[11px] text-text-3">
           <span className="flex items-center gap-1.5">
@@ -147,7 +146,8 @@ export function ProgressChart() {
               stroke={LG_RED}
               strokeWidth={2.5}
               strokeLinecap="round"
-              dot={false}
+              // 일자별 점 항상 표시 — 동그라미 1개 = 1일
+              dot={{ r: 2.5, fill: LG_RED, stroke: '#fff', strokeWidth: 1.5 }}
               activeDot={{ r: 5, fill: LG_RED, stroke: '#fff', strokeWidth: 2.5 }}
               isAnimationActive={false}
             />

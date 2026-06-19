@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Server, Cloud, UserX, LogOut, Copy, RefreshCw } from 'lucide-react';
+import { Server, Cloud, UserX, LogOut } from 'lucide-react';
 import { Panel } from '@/components/layout/Panel';
 import { MetricRow } from '@/components/kpi/MetricRow';
 import { ListSidePanel } from '@/components/drawer/ListSidePanel';
-import { IncidentDrawer } from './IncidentDrawer';
 import { AssetDetailDrawer } from './AssetDetailDrawer';
 import type { AssetRef } from './AssetDetailDrawer';
 import { getAssetTypeSummary, getAssetList, getRetiredAssets } from '@/lib/api/dashboard';
@@ -12,7 +11,7 @@ import type { AssetListRow } from '@/lib/api/dashboard';
 import { cn } from '@/lib/cn';
 
 type AssetKind = 'onprem' | 'cloud' | 'unassigned';
-type PanelKey = AssetKind | 'retired' | 'dup-ip-new' | 'dup-ip-update';
+type PanelKey = AssetKind | 'retired';
 
 export function AssetInfoSection() {
   const { data } = useQuery({ queryKey: ['dashboard', 'asset-types'], queryFn: getAssetTypeSummary });
@@ -31,17 +30,11 @@ export function AssetInfoSection() {
         value={d?.unassigned.toLocaleString() ?? '—'} unit="건" onClick={() => setPanel('unassigned')} />
       <MetricRow icon={LogOut} iconColor="red" name="담당자 전원 퇴사" description="인사 시스템 별도 쿼리 결과"
         value={d?.retired ?? '—'} unit="건" onClick={() => setPanel('retired')} />
-      <MetricRow icon={Copy} iconColor="purple" name="IP 중복 · 신규 등록" description="다중 중복으로 신규 등록된 자산"
-        value={d?.dupIpNew ?? 0} unit="건" onClick={() => setPanel('dup-ip-new')} />
-      <MetricRow icon={RefreshCw} iconColor="gray" name="IP 중복 · 정보 갱신" description="단일 중복 → 현업 담당자 추가"
-        value={d?.dupIpUpdate ?? 0} unit="건" onClick={() => setPanel('dup-ip-update')} />
 
       {(['onprem', 'cloud', 'unassigned'] as const).map((k) => (
         <AssetListDrawer key={k} kind={k} open={panel === k} onClose={() => setPanel(null)} />
       ))}
       <RetiredDrawer open={panel === 'retired'} onClose={() => setPanel(null)} />
-      <IncidentDrawer open={panel === 'dup-ip-new'} onClose={() => setPanel(null)} anomalyKey="dup-ip-new" eyebrow="IT 자산 정보" title="IP 중복 · 신규 등록" />
-      <IncidentDrawer open={panel === 'dup-ip-update'} onClose={() => setPanel(null)} anomalyKey="dup-ip-update" eyebrow="IT 자산 정보" title="IP 중복 · 정보 갱신" />
     </Panel>
   );
 }

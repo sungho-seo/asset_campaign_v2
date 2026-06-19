@@ -28,6 +28,10 @@ export default function DashboardPage() {
         <HourlyHeatmap />
       </div>
 
+      <div className="mb-5">
+        <OrgSection />
+      </div>
+
       <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <AssetInfoSection />
         <AnomalySection />
@@ -35,10 +39,6 @@ export default function DashboardPage() {
 
       <div className="mb-5">
         <SearchAnalysisSection />
-      </div>
-
-      <div className="mb-5">
-        <OrgSection />
       </div>
 
       {/* 최하단 — 일자별 신규 vs 수정 비율 (v1 유지) */}

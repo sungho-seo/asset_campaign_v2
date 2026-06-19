@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Users, UserCheck, FileText } from 'lucide-react';
 import { KPICard } from '@/components/kpi/KPICard';
 import { ListSidePanel } from '@/components/drawer/ListSidePanel';
+import { AssetDetailDrawer } from './AssetDetailDrawer';
+import type { AssetRef } from './AssetDetailDrawer';
 import { getKpi, getAccessLog, getUpdatedAssets } from '@/lib/api/dashboard';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/cn';
@@ -128,12 +130,14 @@ function AccessPanel({ open, onClose }: { open: boolean; onClose: () => void }) 
 
 function UpdatePanel({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data } = useQuery({ queryKey: ['dashboard', 'updated'], queryFn: getUpdatedAssets, enabled: open });
+  const [assetRef, setAssetRef] = useState<AssetRef>(null);
   const rows = data ?? [];
   const counts = { mod: rows.filter((r) => r.kind === 'modified').length, neo: rows.filter((r) => r.kind === 'new').length };
   const match = (e: (typeof rows)[number], f: string) =>
     !f || `${e.hostname} ${e.by} ${e.csp ?? ''}`.toLowerCase().includes(f.toLowerCase());
 
   return (
+    <>
     <ListSidePanel
       open={open}
       onClose={onClose}
@@ -155,7 +159,11 @@ function UpdatePanel({ open, onClose }: { open: boolean; onClose: () => void }) 
       {(filter) => (
         <div className="space-y-1.5">
           {rows.filter((e) => match(e, filter)).map((e) => (
-            <div key={e.id} className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-[12.5px]">
+            <button
+              key={e.id}
+              onClick={() => setAssetRef({ host: e.hostname })}
+              className="flex w-full items-center justify-between rounded-md border border-line px-3 py-2 text-left text-[12.5px] transition-colors hover:border-brand/40 hover:bg-bg-soft/40"
+            >
               <div className="min-w-0">
                 <div className="font-medium text-text">
                   {e.hostname}
@@ -167,10 +175,12 @@ function UpdatePanel({ open, onClose }: { open: boolean; onClose: () => void }) 
                 e.kind === 'new' ? 'bg-purple-soft text-purple' : 'bg-success-soft text-success')}>
                 {e.kind === 'new' ? '신규' : '수정'}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       )}
     </ListSidePanel>
+    <AssetDetailDrawer refValue={assetRef} onClose={() => setAssetRef(null)} />
+    </>
   );
 }

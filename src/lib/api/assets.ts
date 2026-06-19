@@ -67,6 +67,22 @@ export async function getAsset(id: string): Promise<Asset | undefined> {
   return mockDb.assets.find((a) => a.id === id);
 }
 
+/** 대시보드 드릴다운용 — id/host/ip 중 하나로 현재 자산을 조회. */
+export async function getAssetByRef(ref: {
+  assetId?: string;
+  host?: string;
+  ip?: string;
+}): Promise<Asset | undefined> {
+  await delay(100);
+  const { assetId, host, ip } = ref;
+  return mockDb.assets.find(
+    (a) =>
+      (assetId && a.id === assetId) ||
+      (host && a.hostname === host) ||
+      (ip && a.ips.includes(ip)),
+  );
+}
+
 // ── 자산 정보 필드 (담당자 제외) 수정 + 낙관적 잠금 ──
 export type AssetFields = {
   assetType: 'on-premise' | 'cloud' | null;

@@ -181,19 +181,9 @@ export type AssetListRow = {
 };
 
 export async function getAssetList(
-  kind: 'onprem' | 'cloud' | 'unassigned' | 'retired',
+  kind: 'onprem' | 'cloud' | 'unassigned',
 ): Promise<AssetListRow[]> {
   await delay(150);
-  if (kind === 'retired') {
-    return retiredAssets.map((r) => ({
-      id: r.id,
-      ip: r.ip,
-      hostname: r.hostname,
-      detail: `퇴사 ${r.retiredAt}`,
-      ownerName: r.lastOwner,
-      ownerTeam: '퇴사 처리',
-    }));
-  }
   const pick = mockDb.assets.filter((a) => {
     if (kind === 'onprem') return a.assetType === 'on-premise';
     if (kind === 'cloud') return a.assetType === 'cloud';
@@ -212,6 +202,11 @@ export async function getAssetList(
       ownerTeam: biz ? teamOf(biz.deptPath) : undefined,
     };
   });
+}
+
+export async function getRetiredAssets() {
+  await delay(150);
+  return retiredAssets;
 }
 
 // ── §7.6 방치 자산 ──
@@ -324,7 +319,7 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       return {
         key, desc: '동일 자산을 2명 이상이 수정한 케이스. 마지막 저장이 반영되며 이전 입력은 변경 이력에 보존됩니다.',
         stats: eventStats(rows.length, times), rows,
-        csvHeaders: ['IP', '자산명', '충돌 사용자 A', '충돌 사용자 B', '마지막 충돌'],
+        csvHeaders: ['IP', '자산명', '충돌 담당자 A', '충돌 담당자 B', '마지막 충돌'],
         csvRows: rows.map((r) => [r.ip!, r.host!, r.users![0]!.name, r.users![1]!.name, r.when!]),
       };
     }
@@ -344,7 +339,7 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       return {
         key, desc: '동시 수정 알림 후 "내 변경으로 덮어쓰기"를 선택한 케이스. 이전 사용자의 입력은 변경 이력에서 확인 가능합니다.',
         stats: eventStats(rows.length, times), rows,
-        csvHeaders: ['IP', '자산명', '덮어쓴 사용자', '이전 사용자', '시점'],
+        csvHeaders: ['IP', '자산명', '덮어쓴 담당자', '기존 담당자', '일시'],
         csvRows: rows.map((r) => [r.ip!, r.host!, r.who!.name, r.prev!.name, r.when!]),
       };
     }
@@ -365,7 +360,7 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       return {
         key, desc: '담당자 추가/삭제 이력. 자기 자신 대량 추가나 타인 무단 삭제 패턴을 추적합니다.',
         stats: eventStats(rows.length, times), rows,
-        csvHeaders: ['IP', '자산명', '행위자', '추가/삭제', '대상자', '역할', '시점'],
+        csvHeaders: ['IP', '자산명', '행위자', '추가/삭제', '대상자', '역할', '일시'],
         csvRows: rows.map((r) => [r.ip!, r.host!, r.who!.name, r.action!, r.target!.name, r.role!, r.when!]),
       };
     }
@@ -381,7 +376,7 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       return {
         key, desc: '동일 IP 자산이 2건 이상 존재하는 상태에서 신규 등록된 자산. 동일 IP 자산 목록을 함께 확인하세요.',
         stats: eventStats(rows.length, times), rows,
-        csvHeaders: ['신규 IP', '신규 자산명', '동일 IP 자산', '시점'],
+        csvHeaders: ['신규 IP', '신규 자산명', '동일 IP 자산', '일시'],
         csvRows: rows.map((r) => [r.ip!, r.host!, r.duplicates!.map((d) => d.host).join(' / '), r.when!]),
       };
     }
@@ -394,7 +389,7 @@ export async function getAnomalyDetail(key: AnomalyKey): Promise<AnomalyDetail> 
       return {
         key, desc: '단일 IP 중복 발견 시 기존 자산의 현업 담당자로 본인이 추가된 케이스.',
         stats: eventStats(rows.length, times), rows,
-        csvHeaders: ['IP', '갱신 자산명', '추가된 현업 담당자', '시점'],
+        csvHeaders: ['IP', '갱신 자산명', '추가된 현업 담당자', '일시'],
         csvRows: rows.map((r) => [r.ip!, r.host!, r.added!.name, r.when!]),
       };
     }

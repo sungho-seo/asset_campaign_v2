@@ -155,11 +155,38 @@ export const ASSET_TYPE_BASELINE = {
 };
 
 // 담당자 전원 퇴사 (인사 별도 쿼리 결과 — 화면만 준비)
-export type RetiredAssetRow = { id: string; ip: string; hostname: string; lastOwner: string; retiredAt: string };
+export type RetiredOwner = { role: string; name: string; team: string };
+export type RetiredAssetRow = {
+  id: string;
+  ip: string;
+  hostname: string;
+  os: string;
+  owners: RetiredOwner[];
+};
 export const retiredAssets: RetiredAssetRow[] = [
-  { id: 'R-1', ip: '10.10.1.21', hostname: 'legacy-erp-01', lastOwner: '강퇴직(2026-03)', retiredAt: '2026-03-31' },
-  { id: 'R-2', ip: '10.10.1.34', hostname: 'old-mail-relay', lastOwner: '윤퇴직(2026-04)', retiredAt: '2026-04-15' },
-  { id: 'R-3', ip: '10.10.1.88', hostname: 'archive-nas-02', lastOwner: '한퇴직(2026-02)', retiredAt: '2026-02-28' },
+  {
+    id: 'R-1', ip: '10.10.1.21', hostname: 'legacy-erp-01', os: 'CentOS 6.10',
+    owners: [
+      { role: '현업 담당자', name: '강퇴직', team: '구 ERP운영팀(해체)' },
+      { role: 'IT 담당자', name: '한퇴직', team: '구 ERP운영팀(해체)' },
+      { role: '서버 담당자(정)', name: '오퇴직', team: '인프라운영팀' },
+    ],
+  },
+  {
+    id: 'R-2', ip: '10.10.1.34', hostname: 'old-mail-relay', os: 'RHEL 6.9',
+    owners: [
+      { role: '현업 담당자', name: '윤퇴직', team: '메시징운영팀(해체)' },
+      { role: 'SM 담당자', name: '임퇴직', team: '메시징운영팀(해체)' },
+    ],
+  },
+  {
+    id: 'R-3', ip: '10.10.1.88', hostname: 'archive-nas-02', os: 'Synology DSM',
+    owners: [
+      { role: '현업 담당자', name: '한퇴직', team: '스토리지팀' },
+      { role: '서버 담당자(정)', name: '강퇴직', team: '스토리지팀' },
+      { role: '서버 담당자(부)', name: '문퇴직', team: '스토리지팀' },
+    ],
+  },
 ];
 
 // ── §7.6 방치 자산 ──

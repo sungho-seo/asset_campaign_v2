@@ -3,6 +3,15 @@
     "title": "IT 자산 등록 캠페인",
     "subtitle": "본인 관련 자산 정보를 확인해 주세요"
   },
+  "topbar": {
+    "brand": "IT 자산 등록",
+    "subtitle": "IT Asset Registration",
+    "campaign": "캠페인 진행 중",
+    "lang": {
+      "korean": "한",
+      "english": "EN"
+    }
+  },
   "nav": {
     "notice": "안내",
     "employee": "임직원",

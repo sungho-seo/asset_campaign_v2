@@ -1,56 +1,61 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ShieldCheck } from 'lucide-react';
+import { Pill } from '@/components/common/Pill';
+import { UserChip } from '@/components/common/UserChip';
+import { LanguageToggle } from './LanguageToggle';
 import { getCurrentUser } from '@/lib/mockAuth';
+import { CAMPAIGN } from '@/lib/mockDashboard';
 import { DASHBOARD_ONLY } from '@/config';
 import { cn } from '@/lib/cn';
 
-const tabClass = ({ isActive }: { isActive: boolean }) =>
+function campaignDPlus(): number {
+  const start = new Date(`${CAMPAIGN.startDate}T00:00:00+09:00`).getTime();
+  return Math.max(0, Math.floor((Date.now() - start) / 86_400_000));
+}
+
+const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
-    'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-    isActive ? 'bg-lgred text-white' : 'text-neutral-600 hover:bg-neutral-100',
+    'rounded px-2.5 py-1 font-mono text-[11px] transition-colors',
+    isActive ? 'bg-brand text-white' : 'text-text-3 hover:text-text',
   );
 
+/** 상단바 — v1 구성: 브랜드 + 네비 + 캠페인 배지 + 사용자 칩 + 한/EN. */
 export function TopBar() {
   const { t } = useTranslation();
   const user = getCurrentUser();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-neutral-200 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-6">
-          <span className="text-base font-bold text-lgred">{t('app.title')}</span>
-          {DASHBOARD_ONLY ? (
-            // 대시보드 전용 모드 — 탭 숨김, 대시보드 표시만
-            <span className="inline-flex items-center gap-1 rounded-md bg-lgred px-3 py-1.5 text-sm font-medium text-white">
-              <ShieldCheck size={14} />
-              {t('nav.dashboard')}
-            </span>
-          ) : (
+    <header className="sticky top-0 z-30 border-b border-line bg-bg/85 backdrop-blur supports-[backdrop-filter]:bg-bg/70">
+      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-8 py-3.5">
+        <Link to={DASHBOARD_ONLY ? '/dashboard' : '/notice'} className="flex items-center gap-3">
+          <div className="grid h-7 w-7 place-items-center rounded-md bg-brand font-mono text-[11px] font-semibold tracking-tighter2 text-white">
+            IT
+          </div>
+          <div className="text-sm font-semibold tracking-tightish text-text">
+            {t('topbar.brand')}
+            <span className="ml-1.5 font-normal text-text-3">/ {t('topbar.subtitle')}</span>
+          </div>
+        </Link>
+
+        <div className="flex items-center gap-4">
+          {!DASHBOARD_ONLY && (
             <nav className="flex items-center gap-1">
-              <NavLink to="/notice" className={tabClass}>
+              <NavLink to="/notice" className={navLinkClass}>
                 {t('nav.notice')}
               </NavLink>
-              <NavLink to="/search" className={tabClass}>
+              <NavLink to="/search" className={navLinkClass}>
                 {t('nav.employee')}
               </NavLink>
-              {user.isInfoSecurityTeam && (
-                <NavLink to="/dashboard" className={tabClass}>
-                  <span className="inline-flex items-center gap-1">
-                    <ShieldCheck size={14} />
-                    {t('nav.dashboard')}
-                  </span>
-                </NavLink>
-              )}
+              <NavLink to="/dashboard" className={navLinkClass}>
+                {t('nav.dashboard')}
+              </NavLink>
             </nav>
           )}
-        </div>
-        <div className="text-right text-xs text-neutral-500">
-          <div className="font-medium text-neutral-700">
-            {user.empName}
-            <span className="ml-1 font-normal text-neutral-400">{user.email}</span>
-          </div>
-          <div>{user.deptPath}</div>
+          <Pill dot="success">
+            {t('topbar.campaign')} · D+{campaignDPlus()}
+          </Pill>
+          <UserChip name={user.empName} meta={user.deptName} />
+          <LanguageToggle />
         </div>
       </div>
     </header>

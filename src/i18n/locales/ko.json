@@ -7,10 +7,7 @@
     "brand": "IT 자산 등록",
     "subtitle": "IT Asset Registration",
     "campaign": "캠페인 진행 중",
-    "lang": {
-      "korean": "한",
-      "english": "EN"
-    }
+    "lang": { "korean": "한", "english": "EN" }
   },
   "nav": {
     "notice": "안내",
@@ -24,5 +21,48 @@
     "save": "변경 저장",
     "cancel": "취소",
     "confirm": "확인 완료"
+  },
+  "notice": {
+    "eyebrow": "안내",
+    "title": "IT 자산 등록 안내",
+    "subtitle": "본인이 사용·관리하고 계신 IT 자산이 있는지 알려 주세요",
+    "scope": {
+      "title": "등록 대상 IT 자산",
+      "cards": {
+        "cloud": { "name": "클라우드", "sub": "AWS · Azure\nGCP · NCP 등" },
+        "server": { "name": "서버", "sub": "물리 서버" },
+        "desktop": { "name": "데스크탑 PC / 워크스테이션", "sub": "개발용" },
+        "laptop": { "name": "노트북", "sub": "개발용" }
+      },
+      "vmTitle": "위 자산에 설치된 가상머신(VM)도 등록 대상에 포함됩니다",
+      "vmBody": "예) VMware · KVM · Hyper-V 등 가상머신",
+      "excludeTitle": "제외 대상",
+      "excludeItems": [
+        "개인 업무용 리스 PC",
+        "개인 · 회사지급 모바일 디바이스",
+        "컨테이너 (ex. Docker, Kubernetes 등)",
+        "제조 · 공정 자산"
+      ]
+    },
+    "ownershipLegend": "본인이 사용·관리하는 자산 보유 여부",
+    "ownership": { "has": "자산 있음", "none": "자산 없음" },
+    "submit": "확인 완료",
+    "submitDisabledHint": "보유 여부를 선택해 주세요",
+    "previous": {
+      "title": "최근 응답 기록",
+      "summary": "{{date}} · {{ownership}}"
+    },
+    "dev": {
+      "title": "개발 도구 (DEV)",
+      "seedSamples": "샘플 이력으로 채우기",
+      "reset": "응답 초기화"
+    }
+  },
+  "noticeDone": {
+    "eyebrow": "응답 완료",
+    "title": "확인해 주셔서 감사합니다",
+    "body": "추후 자산이 생기면 언제든 '안내' 탭에서 응답을 갱신해 주세요.",
+    "backToNotice": "안내로 돌아가기",
+    "goToSearch": "자산 검색하기"
   }
 }

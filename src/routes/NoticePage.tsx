@@ -1,102 +1,114 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Info } from 'lucide-react';
-import { Panel } from '@/components/layout/Panel';
+import { useTranslation } from 'react-i18next';
+import { Check, History, Sparkles } from 'lucide-react';
+import { Shell } from '@/components/layout/Shell';
 import { Button } from '@/components/common/Button';
-import { Badge } from '@/components/common/Badge';
-import { ScopeCards } from '@/components/notice/ScopeCards';
+import { ToggleGroup } from '@/components/common/ToggleGroup';
+import { TargetAssetsSection } from '@/components/notice/TargetAssetsSection';
 import { useNoticeStore } from '@/stores/noticeStore';
-import { formatDateTime } from '@/lib/format';
-import { cn } from '@/lib/cn';
+
+// PRD §4.2 — 자산 등록 안내 페이지 (v1 화면 이식).
+// 톤 완화·단순화: 본문/체크박스 없이 보유 여부 선택만으로 응답 기록.
 
 type Ownership = 'has' | 'none';
 
-/** 안내 페이지 (PRD §4.2). 권고 아닌 안내 톤, 체크박스 없이 보유 여부 라디오만. */
+function formatMonthDayTime(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function NoticePage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const respond = useNoticeStore((s) => s.respond);
+  const seedDevSamples = useNoticeStore((s) => s.seedDevSamples);
+  const resetForDev = useNoticeStore((s) => s.resetForDev);
   const latest = useNoticeStore((s) => s.latestForCurrentUser());
-  const [choice, setChoice] = useState<Ownership | null>(latest?.ownership ?? null);
 
-  const submit = () => {
-    if (!choice) return;
-    respond(choice);
-    if (choice === 'has') navigate('/search');
-    else navigate('/notice/done');
+  const [ownership, setOwnership] = useState<Ownership | null>(latest?.ownership ?? null);
+  const canSubmit = ownership !== null;
+
+  const handleSubmit = () => {
+    if (!ownership) return;
+    respond(ownership);
+    // F-GUIDE-5: ownership에 따라 분기.
+    if (ownership === 'has') navigate('/search', { replace: true });
+    else navigate('/notice/done', { replace: true });
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5 px-6 py-8">
-      <div className="rounded-card border border-lgred-100 bg-pink-soft/60 px-5 py-4">
-        <div className="flex items-center gap-2 text-sm font-semibold text-lgred-700">
-          <Info size={16} />
-          IT 자산 등록 캠페인 안내
+    <Shell className="max-w-[720px]">
+      <header className="mb-6">
+        <div className="mb-1 font-mono text-[11px] font-semibold uppercase tracking-wider text-brand">
+          {t('notice.eyebrow')}
         </div>
-        <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-          사내 IT 자산의 담당자·정보를 최신 상태로 유지하기 위한 캠페인입니다. 본인이 사용·관리하는
-          자산이 있다면 정보를 확인해 주세요. 보유한 자산이 없더라도 응답만 남겨 주시면 됩니다.
-        </p>
-      </div>
+        <h1 className="text-2xl font-semibold tracking-tighter2 text-text">{t('notice.title')}</h1>
+        <p className="mt-1 text-[13px] text-text-3">{t('notice.subtitle')}</p>
+      </header>
 
+      {/* 캠페인 대상 자산 안내 — 응답 카드 위에 둠 */}
+      <TargetAssetsSection />
+
+      {/* 이전 응답 요약 (재진입 시) */}
       {latest && (
-        <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-600">
-          <span className="text-neutral-400">최근 응답:</span>
-          <span className="font-medium text-neutral-800">{formatDateTime(latest.respondedAt)}</span>
-          <span className="text-neutral-300">·</span>
-          <Badge variant={latest.ownership === 'has' ? 'mine' : 'assigned'}>
-            보유 {latest.ownership === 'has' ? '있음' : '없음'}
-          </Badge>
+        <div className="mb-4 flex items-start gap-3 rounded-lg border border-line bg-bg-soft/40 px-4 py-3">
+          <History className="mt-0.5 h-4 w-4 flex-shrink-0 text-text-3" />
+          <div className="min-w-0 flex-1">
+            <div className="text-[12px] font-medium text-text">{t('notice.previous.title')}</div>
+            <div className="mt-0.5 font-mono text-[11.5px] text-text-2">
+              {t('notice.previous.summary', {
+                date: formatMonthDayTime(latest.respondedAt),
+                ownership: t(`notice.ownership.${latest.ownership}`),
+              })}
+            </div>
+          </div>
         </div>
       )}
 
-      <ScopeCards />
-
-      <Panel title="본인이 사용·관리하는 자산 보유 여부">
-        <div className="grid gap-3 sm:grid-cols-2">
-          {(
-            [
-              { value: 'has', label: '보유 있음', desc: '검색·등록 화면으로 이동합니다.' },
-              { value: 'none', label: '보유 없음', desc: '응답만 기록하고 완료합니다.' },
-            ] as const
-          ).map((opt) => {
-            const active = choice === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => setChoice(opt.value)}
-                className={cn(
-                  'flex items-start gap-3 rounded-card border p-4 text-left transition-colors',
-                  active
-                    ? 'border-lgred bg-pink-soft/50 ring-1 ring-lgred'
-                    : 'border-neutral-200 hover:border-neutral-300',
-                )}
-              >
-                <span
-                  className={cn(
-                    'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2',
-                    active ? 'border-lgred' : 'border-neutral-300',
-                  )}
-                >
-                  {active && <span className="h-2.5 w-2.5 rounded-full bg-lgred" />}
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold text-neutral-900">{opt.label}</span>
-                  <span className="block text-xs text-neutral-500">{opt.desc}</span>
-                </span>
-              </button>
-            );
-          })}
+      {/* 응답 입력 카드 */}
+      <section className="rounded-lg border border-line bg-white p-6 shadow-sm">
+        <div className="mb-2 text-[12.5px] font-medium text-text-2">
+          {t('notice.ownershipLegend')}
+          <span className="ml-1.5 text-danger">*</span>
         </div>
+        <ToggleGroup<Ownership>
+          name="notice-ownership"
+          value={ownership}
+          onChange={(v) => setOwnership(v)}
+          options={[
+            { value: 'has', label: t('notice.ownership.has') },
+            { value: 'none', label: t('notice.ownership.none') },
+          ]}
+        />
 
-        <div className="mt-5 flex justify-end">
-          <Button variant="primary" disabled={!choice} onClick={submit}>
-            확인 완료
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="text-[11.5px] text-text-3">{!canSubmit && t('notice.submitDisabledHint')}</div>
+          <Button variant="primary" size="md" disabled={!canSubmit} onClick={handleSubmit}>
+            <Check className="h-3.5 w-3.5" />
+            {t('notice.submit')}
           </Button>
         </div>
-      </Panel>
-    </div>
+      </section>
+
+      {/* DEV 도구 — 개발 모드에서만 노출 */}
+      {import.meta.env.DEV && (
+        <section className="mt-8 rounded-lg border border-dashed border-line bg-bg-soft/30 px-4 py-3">
+          <div className="mb-2 flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-wider text-text-3">
+            <Sparkles className="h-3 w-3" />
+            {t('notice.dev.title')}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="ghost" onClick={() => seedDevSamples()}>
+              {t('notice.dev.seedSamples')}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => resetForDev()}>
+              {t('notice.dev.reset')}
+            </Button>
+          </div>
+        </section>
+      )}
+    </Shell>
   );
 }

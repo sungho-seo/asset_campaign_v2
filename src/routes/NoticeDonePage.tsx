@@ -1,23 +1,44 @@
-import { useNavigate } from 'react-router-dom';
-import { CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { ArrowLeft, CheckCircle2, Search } from 'lucide-react';
+import { Shell } from '@/components/layout/Shell';
 import { Button } from '@/components/common/Button';
 
-/** 안내 완료 화면 ('보유 없음' 응답 후) — PRD §3.1. */
+// PRD §3.1 — '자산 없음' 응답 후 완료 화면 (v1 화면 이식).
+
 export default function NoticeDonePage() {
-  const navigate = useNavigate();
+  const { t } = useTranslation();
+
   return (
-    <div className="mx-auto max-w-lg px-6 py-20 text-center">
-      <CheckCircle2 size={48} className="mx-auto text-success" />
-      <h1 className="mt-4 text-xl font-bold text-neutral-900">확인해 주셔서 감사합니다</h1>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-600">
-        추후 자산이 생기면 언제든 본 페이지에서 응답해 주세요.
-      </p>
-      <div className="mt-6 flex justify-center gap-2">
-        <Button onClick={() => navigate('/notice')}>안내로 돌아가기</Button>
-        <Button variant="primary" onClick={() => navigate('/search')}>
-          자산 검색하기
-        </Button>
+    <Shell className="max-w-[640px]">
+      <div className="mt-12 flex flex-col items-center text-center">
+        <div className="grid h-16 w-16 place-items-center rounded-full bg-brand-soft text-brand">
+          <CheckCircle2 className="h-9 w-9" />
+        </div>
+        <div className="mt-4 font-mono text-[11px] font-semibold uppercase tracking-wider text-brand">
+          {t('noticeDone.eyebrow')}
+        </div>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tighter2 text-text">
+          {t('noticeDone.title')}
+        </h1>
+        <p className="mt-2 max-w-[440px] text-[13px] leading-relaxed text-text-3">
+          {t('noticeDone.body')}
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          <Link to="/notice">
+            <Button size="md" variant="default">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              {t('noticeDone.backToNotice')}
+            </Button>
+          </Link>
+          <Link to="/search">
+            <Button size="md" variant="primary">
+              <Search className="h-3.5 w-3.5" />
+              {t('noticeDone.goToSearch')}
+            </Button>
+          </Link>
+        </div>
       </div>
-    </div>
+    </Shell>
   );
 }

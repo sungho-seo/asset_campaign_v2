@@ -7,10 +7,7 @@
     "brand": "IT Asset Registration",
     "subtitle": "IT 자산 등록",
     "campaign": "Campaign in progress",
-    "lang": {
-      "korean": "한",
-      "english": "EN"
-    }
+    "lang": { "korean": "한", "english": "EN" }
   },
   "nav": {
     "notice": "Guide",
@@ -24,5 +21,48 @@
     "save": "Save changes",
     "cancel": "Cancel",
     "confirm": "Confirm"
+  },
+  "notice": {
+    "eyebrow": "NOTICE",
+    "title": "IT Asset Registration",
+    "subtitle": "Please let us know whether you own or manage any IT assets",
+    "scope": {
+      "title": "Eligible IT Assets",
+      "cards": {
+        "cloud": { "name": "Cloud", "sub": "AWS · Azure\nGCP · NCP, etc." },
+        "server": { "name": "Servers", "sub": "Physical servers" },
+        "desktop": { "name": "Desktop / Workstation", "sub": "Development use" },
+        "laptop": { "name": "Laptop", "sub": "Development use" }
+      },
+      "vmTitle": "Virtual machines (VMs) running on the above assets are also eligible",
+      "vmBody": "e.g., VMware · KVM · Hyper-V",
+      "excludeTitle": "Excluded",
+      "excludeItems": [
+        "Personal lease PCs",
+        "Personal / company-issued mobile devices",
+        "Containers (e.g., Docker, Kubernetes)",
+        "Manufacturing / OT assets"
+      ]
+    },
+    "ownershipLegend": "Do you own or manage any IT assets?",
+    "ownership": { "has": "I have assets", "none": "I have none" },
+    "submit": "Confirm",
+    "submitDisabledHint": "Please select an option",
+    "previous": {
+      "title": "Most recent response",
+      "summary": "{{date}} · {{ownership}}"
+    },
+    "dev": {
+      "title": "Dev tools (DEV)",
+      "seedSamples": "Seed sample history",
+      "reset": "Reset responses"
+    }
+  },
+  "noticeDone": {
+    "eyebrow": "RESPONSE COMPLETE",
+    "title": "Thank you for your response",
+    "body": "If you acquire assets in the future, you can update your response anytime from the 'Notice' tab.",
+    "backToNotice": "Back to Notice",
+    "goToSearch": "Search assets"
   }
 }

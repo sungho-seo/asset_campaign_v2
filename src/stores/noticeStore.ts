@@ -12,6 +12,9 @@ type NoticeState = {
   hasResponded: () => boolean;
   /** 새 응답을 행으로 추가 */
   respond: (ownership: 'has' | 'none') => NoticeResponse;
+  /** [DEV] 샘플 이력 채우기 / 초기화 */
+  seedDevSamples: () => void;
+  resetForDev: () => void;
 };
 
 export const useNoticeStore = create<NoticeState>()(
@@ -41,6 +44,19 @@ export const useNoticeStore = create<NoticeState>()(
         set((s) => ({ responses: [...s.responses, res] }));
         return res;
       },
+      seedDevSamples: () => {
+        const me = getCurrentUser();
+        const mk = (ownership: 'has' | 'none', daysAgo: number): NoticeResponse => ({
+          responseId: crypto.randomUUID(),
+          empNo: me.empNo,
+          empName: me.empName,
+          deptPath: me.deptPath,
+          ownership,
+          respondedAt: new Date(Date.now() - daysAgo * 86_400_000).toISOString(),
+        });
+        set({ responses: [mk('none', 3), mk('has', 1)] });
+      },
+      resetForDev: () => set({ responses: [] }),
     }),
     { name: 'acv2-notice' },
   ),
